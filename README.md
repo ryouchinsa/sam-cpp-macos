@@ -40,7 +40,7 @@ if(!successPreprocessImage){
 }
 ```
 
-When you click a foreground point or a background point, getMask() is called and the mask result is shown. From the second click, getMask() uses the previous mask result to increase the accuracy. To support undo/redo actions, Sam class instance retains the previous mask array. previousMaskIdx is used which previous mask to use in getMask(). For the first click in the image, previousMaskIdx is set to -1. When getMask() is called, previousMaskIdx is incremented. When you start labeling a new object in the image, isNextGetMask is set to true so that getMask() does not use the previous mask result. From the second click for the object, isNextGetMask is set to false.
+When you click a foreground point or a background point, getMask() is called and the mask result is shown. From the second click, getMask() uses the previous mask result to increase the accuracy. To support undo/redo actions, Sam class instance retains the previous mask array. previousMaskIdx is used which previous mask to use in getMask(). For the first click in the image, previousMaskIdx is set to -1. When getMask() is called, previousMaskIdx is incremented. When you start labeling a new object in the image, isNextGetMask is set to true so that getMask() does not use the previous mask result. From the second click for the object, isNextGetMask is set to false to use the previous mask result.
 
 ```cpp
 std::cout<<"getMask started"<<std::endl;
