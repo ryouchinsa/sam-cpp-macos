@@ -1,6 +1,6 @@
 ## Segment Anything CPP Wrapper for macOS
 
-This code is originated from [Segment Anything CPP Wrapper](https://github.com/dinglufe/segment-anything-cpp-wrapper) and customized to use low_res_logits which is the previous mask result and to use CPU mode for macOS.
+This code is originated from [Segment Anything CPP Wrapper](https://github.com/dinglufe/segment-anything-cpp-wrapper) and implemented on macOS app [RectLabel](https://rectlabel.com).
 
 ![sam_polygon](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/4640e139-c533-4b8c-b27b-e02a401b9bbd)
 
