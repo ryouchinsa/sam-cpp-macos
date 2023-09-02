@@ -1,6 +1,6 @@
 ## Segment Anything CPP Wrapper for macOS
 
-This code is originated from [Segment Anything CPP Wrapper](https://github.com/dinglufe/segment-anything-cpp-wrapper) and implemented on macOS app [RectLabel](https://rectlabel.com).
+This code is originated from [Segment Anything CPP Wrapper](https://github.com/dinglufe/segment-anything-cpp-wrapper) and implemented on macOS app [RectLabel](https://rectlabel.com). We customized the original code so that getMask() uses the previous mask result called as low_res_logits and retain the previous mask array for undo/redo actions. 
 
 ![sam_polygon](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/4640e139-c533-4b8c-b27b-e02a401b9bbd)
 
