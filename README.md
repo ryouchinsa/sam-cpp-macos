@@ -1,6 +1,3 @@
-# sam-cpp-macos
-Segment Anything CPP Wrapper for macOS
-
 ## Segment Anything CPP Wrapper for macOS
 
 This code is originated from [Segment Anything CPP Wrapper](https://github.com/dinglufe/segment-anything-cpp-wrapper) and customized to use low_res_logits which is the previous mask result and to use CPU mode for macOS.
