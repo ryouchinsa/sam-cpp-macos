@@ -8,7 +8,8 @@ int main(int argc, char** argv) {
   std::string pathEncoder = modelName + "/" + modelName + "_preprocess.onnx";
   std::string pathDecoder = modelName + "/" + modelName + ".onnx";
   std::cout<<"loadModel started"<<std::endl;
-  bool successLoadModel = sam.loadModel(pathEncoder, pathDecoder, std::thread::hardware_concurrency());
+  bool terminated = false; // Check the preprocessing is terminated when the image is changed
+  bool successLoadModel = sam.loadModel(pathEncoder, pathDecoder, std::thread::hardware_concurrency(), &terminated);
   if(!successLoadModel){
     std::cout<<"loadModel error"<<std::endl;
     return 1;
@@ -17,8 +18,6 @@ int main(int argc, char** argv) {
   cv::Mat image = cv::imread(imagePath, cv::IMREAD_COLOR);
   auto inputSize = sam.getInputSize();
   cv::resize(image, image, inputSize);
-  cv::imwrite("resized.jpg", image);
-  bool terminated = false; // Check the preprocessing is terminated when the image is changed
   std::cout<<"preprocessImage started"<<std::endl;
   bool successPreprocessImage = sam.preprocessImage(image, &terminated);
   if(!successPreprocessImage){

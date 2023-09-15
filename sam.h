@@ -11,6 +11,7 @@ class Sam {
   Ort::Env env{ORT_LOGGING_LEVEL_WARNING, "test"};
   Ort::SessionOptions sessionOptions[2];
   std::unique_ptr<Ort::Session> sessionPre, sessionSam;
+  bool shouldPreprocessTerminate = false;
   Ort::RunOptions runOptionsPre;
   std::vector<int64_t> inputShapePre, outputShapePre;
   Ort::MemoryInfo memoryInfo{Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault)};
@@ -28,7 +29,7 @@ class Sam {
   void clearPreviousMasks();
   void resizePreviousMasks(int previousMaskIdx);
   void terminatePreprocessing();
-  bool loadModel(const std::string& preModelPath, const std::string& samModelPath, int threadsNumber);
+  bool loadModel(const std::string& preModelPath, const std::string& samModelPath, int threadsNumber, bool *terminated);
   cv::Size getInputSize();
   bool preprocessImage(const cv::Mat& image, bool *terminated);
   cv::Mat getMask(const std::list<cv::Point>& points, const std::list<cv::Point>& negativePoints, const cv::Rect& roi, int previousMaskIdx, bool isNextGetMask);

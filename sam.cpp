@@ -15,6 +15,7 @@ void Sam::clearLoadModel(){
   Ort::Session* sam = sessionSam.release();
   delete pre;
   delete sam;
+  shouldPreprocessTerminate = false;
   inputShapePre.resize(0);
   outputShapePre.resize(0);
   outputTensorValuesPre.resize(0);
@@ -31,6 +32,7 @@ void Sam::resizePreviousMasks(int previousMaskIdx){
 }
 
 void Sam::terminatePreprocessing(){
+  shouldPreprocessTerminate = true;
   runOptionsPre.SetTerminate();
 }
 
@@ -42,30 +44,38 @@ bool modelExists(const std::string& modelPath){
   return true;
 }
 
-bool Sam::loadModel(const std::string& preModelPath, const std::string& samModelPath, int threadsNumber){
+bool Sam::loadModel(const std::string& preModelPath, const std::string& samModelPath, int threadsNumber, bool *terminated){
   if(!modelExists(preModelPath)){
     return false;
   }
   if(!modelExists(samModelPath)){
     return false;
   }
-  clearLoadModel();
-  for(int i = 0; i < 2; i++){
-    auto& option = sessionOptions[i];
-    option.SetIntraOpNumThreads(threadsNumber);
-    option.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
-  }
-  sessionPre = std::make_unique<Ort::Session>(env, preModelPath.c_str(), sessionOptions[0]);
-  if(sessionPre->GetInputCount() != 1 || sessionPre->GetOutputCount() != 1){
-    return false;
-  }
-  sessionSam = std::make_unique<Ort::Session>(env, samModelPath.c_str(), sessionOptions[1]);
-  if(sessionSam->GetInputCount() != 6 || sessionSam->GetOutputCount() != 3){
-    return false;
-  }
-  inputShapePre = sessionPre->GetInputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
-  outputShapePre = sessionPre->GetOutputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
-  if(inputShapePre.size() != 4 || outputShapePre.size() != 4){
+  try{
+    clearLoadModel();
+    for(int i = 0; i < 2; i++){
+      auto& option = sessionOptions[i];
+      option.SetIntraOpNumThreads(threadsNumber);
+      option.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
+    }
+    sessionPre = std::make_unique<Ort::Session>(env, preModelPath.c_str(), sessionOptions[0]);
+    if(sessionPre->GetInputCount() != 1 || sessionPre->GetOutputCount() != 1){
+      return false;
+    }
+    sessionSam = std::make_unique<Ort::Session>(env, samModelPath.c_str(), sessionOptions[1]);
+    if(sessionSam->GetInputCount() != 6 || sessionSam->GetOutputCount() != 3){
+      return false;
+    }
+    inputShapePre = sessionPre->GetInputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
+    outputShapePre = sessionPre->GetOutputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
+    if(inputShapePre.size() != 4 || outputShapePre.size() != 4){
+      return false;
+    }
+    if(shouldPreprocessTerminate){
+      *terminated = true;
+      return false;
+    }
+  }catch(Ort::Exception& e){
     return false;
   }
   return true;
@@ -82,26 +92,29 @@ bool Sam::preprocessImage(const cv::Mat& image, bool *terminated){
   if(image.channels() != 3){
     return false;
   }
-  std::vector<uint8_t> inputTensorValues(inputShapePre[0] * inputShapePre[1] * inputShapePre[2] * inputShapePre[3]);
-  for(int i = 0; i < inputShapePre[2]; i++){
-    for(int j = 0; j < inputShapePre[3]; j++){
-      inputTensorValues[i * inputShapePre[3] + j] = image.at<cv::Vec3b>(i, j)[2];
-      inputTensorValues[inputShapePre[2] * inputShapePre[3] + i * inputShapePre[3] + j] =
-          image.at<cv::Vec3b>(i, j)[1];
-      inputTensorValues[2 * inputShapePre[2] * inputShapePre[3] + i * inputShapePre[3] + j] =
-          image.at<cv::Vec3b>(i, j)[0];
-    }
-  }
-  auto inputTensor = Ort::Value::CreateTensor<uint8_t>(memoryInfo, inputTensorValues.data(), inputTensorValues.size(), inputShapePre.data(), inputShapePre.size());
-  outputTensorValuesPre = std::vector<float>(outputShapePre[0] * outputShapePre[1] * outputShapePre[2] * outputShapePre[3]);
-  auto outputTensorPre = Ort::Value::CreateTensor<float>(memoryInfo, outputTensorValuesPre.data(), outputTensorValuesPre.size(), outputShapePre.data(), outputShapePre.size());
-  const char *inputNamesPre[] = {"input"}, *outputNamesPre[] = {"output"};
-  runOptionsPre.UnsetTerminate();
   try{
+    std::vector<uint8_t> inputTensorValues(inputShapePre[0] * inputShapePre[1] * inputShapePre[2] * inputShapePre[3]);
+    for(int i = 0; i < inputShapePre[2]; i++){
+      for(int j = 0; j < inputShapePre[3]; j++){
+        inputTensorValues[i * inputShapePre[3] + j] = image.at<cv::Vec3b>(i, j)[2];
+        inputTensorValues[inputShapePre[2] * inputShapePre[3] + i * inputShapePre[3] + j] =
+            image.at<cv::Vec3b>(i, j)[1];
+        inputTensorValues[2 * inputShapePre[2] * inputShapePre[3] + i * inputShapePre[3] + j] =
+            image.at<cv::Vec3b>(i, j)[0];
+      }
+    }
+    auto inputTensor = Ort::Value::CreateTensor<uint8_t>(memoryInfo, inputTensorValues.data(), inputTensorValues.size(), inputShapePre.data(), inputShapePre.size());
+    outputTensorValuesPre = std::vector<float>(outputShapePre[0] * outputShapePre[1] * outputShapePre[2] * outputShapePre[3]);
+    auto outputTensorPre = Ort::Value::CreateTensor<float>(memoryInfo, outputTensorValuesPre.data(), outputTensorValuesPre.size(), outputShapePre.data(), outputShapePre.size());
+    const char *inputNamesPre[] = {"input"}, *outputNamesPre[] = {"output"};
+    runOptionsPre.UnsetTerminate();
+    if(shouldPreprocessTerminate){
+      *terminated = true;
+      return false;
+    }
     sessionPre->Run(runOptionsPre, inputNamesPre, &inputTensor, 1, outputNamesPre, &outputTensorPre, 1);
   }catch(Ort::Exception& e){
     *terminated = true;
-    std::cout<<"terminated"<<std::endl;
     return false;
   }
   return true;
