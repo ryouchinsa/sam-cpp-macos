@@ -8,6 +8,8 @@ Download a zipped model folder from
 [MobileSAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/mobile_sam.zip), [ViT-Large SAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam_vit_l_0b3195.zip), and [ViT-Huge SAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam_vit_h_4b8939.zip).
 Put the unzipped model folder into sam-cpp-macos folder.
 
+![スクリーンショット 2023-09-15 22 14 30](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/8d2b1ade-1f38-4f9b-a40d-73607893c903)
+
 Edit the modelName in [test.cpp](https://github.com/ryouchinsa/sam-cpp-macos/blob/master/test.cpp).
 
 ```cpp
@@ -16,7 +18,8 @@ std::string modelName = "mobile_sam";
 std::string pathEncoder = modelName + "/" + modelName + "_preprocess.onnx";
 std::string pathDecoder = modelName + "/" + modelName + ".onnx";
 std::cout<<"loadModel started"<<std::endl;
-bool successLoadModel = sam.loadModel(pathEncoder, pathDecoder, std::thread::hardware_concurrency());
+bool terminated = false; // Check the preprocessing is terminated when the image is changed
+bool successLoadModel = sam.loadModel(pathEncoder, pathDecoder, std::thread::hardware_concurrency(), &terminated);
 if(!successLoadModel){
   std::cout<<"loadModel error"<<std::endl;
   return 1;
@@ -30,8 +33,6 @@ std::string imagePath = "david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg";
 cv::Mat image = cv::imread(imagePath, cv::IMREAD_COLOR);
 auto inputSize = sam.getInputSize();
 cv::resize(image, image, inputSize);
-cv::imwrite("resized.jpg", image);
-bool terminated = false; // Check the preprocessing is terminated when the image is changed
 std::cout<<"preprocessImage started"<<std::endl;
 bool successPreprocessImage = sam.preprocessImage(image, &terminated);
 if(!successPreprocessImage){
