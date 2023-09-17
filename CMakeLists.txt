@@ -3,6 +3,9 @@ set(CMAKE_CXX_STANDARD 17)
 project(SamCPP)
 find_package(OpenCV CONFIG REQUIRED)
 
+message(STATUS "OpenCV_INCLUDE_DIRS = ${OpenCV_INCLUDE_DIRS}")
+message(STATUS "OpenCV_LIBS = ${OpenCV_LIBS}")
+
 add_library(sam_cpp_lib SHARED sam.h sam.cpp)
 target_include_directories(
   sam_cpp_lib PUBLIC 
