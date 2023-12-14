@@ -9,11 +9,11 @@ message(STATUS "OpenCV_LIBS = ${OpenCV_LIBS}")
 add_library(sam_cpp_lib SHARED sam.h sam.cpp)
 target_include_directories(
   sam_cpp_lib PUBLIC 
-  /Users/ryo/Downloads/onnxruntime-osx-universal2-1.15.1/include
+  /Users/ryo/Downloads/onnxruntime-osx-universal2-1.16.3/include
 )
 target_link_libraries(
   sam_cpp_lib PUBLIC
-  /Users/ryo/Downloads/onnxruntime-osx-universal2-1.15.1/lib/libonnxruntime.dylib
+  /Users/ryo/Downloads/onnxruntime-osx-universal2-1.16.3/lib/libonnxruntime.dylib
   ${OpenCV_LIBS}
 )
 

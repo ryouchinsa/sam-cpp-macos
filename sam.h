@@ -8,30 +8,35 @@
 #include <iostream>
 
 class Sam {
+  std::unique_ptr<Ort::Session> sessionPre, sessionSam;
   Ort::Env env{ORT_LOGGING_LEVEL_WARNING, "test"};
   Ort::SessionOptions sessionOptions[2];
-  std::unique_ptr<Ort::Session> sessionPre, sessionSam;
-  bool shouldPreprocessTerminate = false;
   Ort::RunOptions runOptionsPre;
-  std::vector<int64_t> inputShapePre, outputShapePre;
   Ort::MemoryInfo memoryInfo{Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault)};
+  std::vector<int64_t> inputShapePre, outputShapePre;
   std::vector<float> outputTensorValuesPre;
   std::vector<std::vector<float>> previousMasks;
   const char *inputNamesSam[6]{"image_embeddings", "point_coords", "point_labels",
                                "mask_input", "has_mask_input", "orig_im_size"},
   *outputNamesSam[3]{"masks", "iou_predictions", "low_res_masks"};
-
+  bool loadingModel = false;
+  bool preprocessing = false;
+  bool terminating = false;
+  
  public:
   Sam();
   ~Sam();
-  void clear();
-  void clearLoadModel();
+  bool clearLoadModel();
   void clearPreviousMasks();
   void resizePreviousMasks(int previousMaskIdx);
   void terminatePreprocessing();
-  bool loadModel(const std::string& preModelPath, const std::string& samModelPath, int threadsNumber, bool *terminated);
+  bool loadModel(const std::string& preModelPath, const std::string& samModelPath, int threadsNumber);
+  void loadingStart();
+  void loadingEnd();
   cv::Size getInputSize();
-  bool preprocessImage(const cv::Mat& image, bool *terminated);
+  bool preprocessImage(const cv::Mat& image);
+  void preprocessingStart();
+  void preprocessingEnd();
   cv::Mat getMask(const std::list<cv::Point>& points, const std::list<cv::Point>& negativePoints, const cv::Rect& roi, int previousMaskIdx, bool isNextGetMask);
 };
 

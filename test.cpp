@@ -8,8 +8,10 @@ int main(int argc, char** argv) {
   std::string pathEncoder = modelName + "/" + modelName + "_preprocess.onnx";
   std::string pathDecoder = modelName + "/" + modelName + ".onnx";
   std::cout<<"loadModel started"<<std::endl;
-  bool terminated = false; // Check the preprocessing is terminated when the image is changed
-  bool successLoadModel = sam.loadModel(pathEncoder, pathDecoder, std::thread::hardware_concurrency(), &terminated);
+  std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+  bool successLoadModel = sam.loadModel(pathEncoder, pathDecoder, std::thread::hardware_concurrency());
+  std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+  std::cout << "Time difference (sec) = " <<  (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()) /1000000.0  <<std::endl;
   if(!successLoadModel){
     std::cout<<"loadModel error"<<std::endl;
     return 1;
@@ -19,12 +21,16 @@ int main(int argc, char** argv) {
   auto inputSize = sam.getInputSize();
   cv::resize(image, image, inputSize);
   std::cout<<"preprocessImage started"<<std::endl;
-  bool successPreprocessImage = sam.preprocessImage(image, &terminated);
+  begin = std::chrono::steady_clock::now();
+  bool successPreprocessImage = sam.preprocessImage(image);
+  end = std::chrono::steady_clock::now();
+  std::cout << "Time difference (sec) = " <<  (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()) /1000000.0  <<std::endl;
   if(!successPreprocessImage){
     std::cout<<"preprocessImage error"<<std::endl;
     return 1;
   }
   std::cout<<"getMask started"<<std::endl;
+  begin = std::chrono::steady_clock::now();
   std::list<cv::Point> points, nagativePoints;
   cv::Rect roi;
   // 1st object and 1st click
@@ -40,25 +46,7 @@ int main(int argc, char** argv) {
   mask = sam.getMask(points, nagativePoints, roi, previousMaskIdx, isNextGetMask);
   previousMaskIdx++;
   cv::imwrite("mask-object1-click2.png", mask);
-  // 2nd object and 1st click
-  isNextGetMask = true;
-  points.clear();
-  points.push_back({815, 200});
-  mask = sam.getMask(points, nagativePoints, roi, previousMaskIdx, isNextGetMask);
-  previousMaskIdx++;
-  cv::imwrite("mask-object2-click1.png", mask);
-  // 2nd object and 2nd click
-  isNextGetMask = false;
-  points.push_back({755, 310});
-  mask = sam.getMask(points, nagativePoints, roi, previousMaskIdx, isNextGetMask);
-  previousMaskIdx++;
-  cv::imwrite("mask-object2-click2.png", mask);
-  // 1st object and box
-  isNextGetMask = true;
-  points.clear();
-  roi = cv::Rect(681, 386, 320, 260);
-  mask = sam.getMask(points, nagativePoints, roi, previousMaskIdx, isNextGetMask);
-  previousMaskIdx++;
-  cv::imwrite("mask-object1-box.png", mask);
+  end = std::chrono::steady_clock::now();
+  std::cout << "Time difference (sec) = " <<  (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()) /1000000.0  <<std::endl;
   return 0;
 }

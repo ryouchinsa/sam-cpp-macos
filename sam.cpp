@@ -2,23 +2,29 @@
 
 Sam::Sam(){}
 Sam::~Sam(){
-  clear();
-}
-
-void Sam::clear(){
+  if(loadingModel){
+    return;
+  }
+  if(preprocessing){
+    return;
+  }
   clearLoadModel();
   clearPreviousMasks();
 }
 
-void Sam::clearLoadModel(){
-  Ort::Session* pre = sessionPre.release();
-  Ort::Session* sam = sessionSam.release();
-  delete pre;
-  delete sam;
-  shouldPreprocessTerminate = false;
-  inputShapePre.resize(0);
-  outputShapePre.resize(0);
-  outputTensorValuesPre.resize(0);
+bool Sam::clearLoadModel(){
+  try{
+    Ort::Session* pre = sessionPre.release();
+    Ort::Session* sam = sessionSam.release();
+    delete pre;
+    delete sam;
+    inputShapePre.resize(0);
+    outputShapePre.resize(0);
+    outputTensorValuesPre.resize(0);
+  }catch(Ort::Exception& e){
+    return false;
+  }
+  return true;
 }
 
 void Sam::clearPreviousMasks(){
@@ -32,8 +38,8 @@ void Sam::resizePreviousMasks(int previousMaskIdx){
 }
 
 void Sam::terminatePreprocessing(){
-  shouldPreprocessTerminate = true;
   runOptionsPre.SetTerminate();
+  terminating = true;
 }
 
 bool modelExists(const std::string& modelPath){
@@ -44,15 +50,17 @@ bool modelExists(const std::string& modelPath){
   return true;
 }
 
-bool Sam::loadModel(const std::string& preModelPath, const std::string& samModelPath, int threadsNumber, bool *terminated){
-  if(!modelExists(preModelPath)){
-    return false;
-  }
-  if(!modelExists(samModelPath)){
-    return false;
-  }
+bool Sam::loadModel(const std::string& preModelPath, const std::string& samModelPath, int threadsNumber){
   try{
-    clearLoadModel();
+    loadingStart();
+    if(!clearLoadModel()){
+      loadingEnd();
+      return false;
+    }
+    if(!modelExists(preModelPath) || !modelExists(samModelPath)){
+      loadingEnd();
+      return false;
+    }
     for(int i = 0; i < 2; i++){
       auto& option = sessionOptions[i];
       option.SetIntraOpNumThreads(threadsNumber);
@@ -60,39 +68,56 @@ bool Sam::loadModel(const std::string& preModelPath, const std::string& samModel
     }
     sessionPre = std::make_unique<Ort::Session>(env, preModelPath.c_str(), sessionOptions[0]);
     if(sessionPre->GetInputCount() != 1 || sessionPre->GetOutputCount() != 1){
+      loadingEnd();
       return false;
     }
     sessionSam = std::make_unique<Ort::Session>(env, samModelPath.c_str(), sessionOptions[1]);
     if(sessionSam->GetInputCount() != 6 || sessionSam->GetOutputCount() != 3){
+      loadingEnd();
       return false;
     }
     inputShapePre = sessionPre->GetInputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
     outputShapePre = sessionPre->GetOutputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
     if(inputShapePre.size() != 4 || outputShapePre.size() != 4){
-      return false;
-    }
-    if(shouldPreprocessTerminate){
-      *terminated = true;
+      loadingEnd();
       return false;
     }
   }catch(Ort::Exception& e){
+    loadingEnd();
     return false;
   }
+  if(terminating){
+    loadingEnd();
+    return false;
+  }
+  loadingEnd();
   return true;
+}
+
+void Sam::loadingStart(){
+  loadingModel = true;
+}
+
+void Sam::loadingEnd(){
+  loadingModel = false;
+  terminating = false;
 }
 
 cv::Size Sam::getInputSize(){
   return cv::Size((int)inputShapePre[3], (int)inputShapePre[2]);
 }
 
-bool Sam::preprocessImage(const cv::Mat& image, bool *terminated){
-  if(image.size() != cv::Size((int)inputShapePre[3], (int)inputShapePre[2])){
-    return false;
-  }
-  if(image.channels() != 3){
-    return false;
-  }
+bool Sam::preprocessImage(const cv::Mat& image){
   try{
+    preprocessingStart();
+    if(image.size() != cv::Size((int)inputShapePre[3], (int)inputShapePre[2])){
+      preprocessingEnd();
+      return false;
+    }
+    if(image.channels() != 3){
+      preprocessingEnd();
+      return false;
+    }
     std::vector<uint8_t> inputTensorValues(inputShapePre[0] * inputShapePre[1] * inputShapePre[2] * inputShapePre[3]);
     for(int i = 0; i < inputShapePre[2]; i++){
       for(int j = 0; j < inputShapePre[3]; j++){
@@ -107,17 +132,27 @@ bool Sam::preprocessImage(const cv::Mat& image, bool *terminated){
     outputTensorValuesPre = std::vector<float>(outputShapePre[0] * outputShapePre[1] * outputShapePre[2] * outputShapePre[3]);
     auto outputTensorPre = Ort::Value::CreateTensor<float>(memoryInfo, outputTensorValuesPre.data(), outputTensorValuesPre.size(), outputShapePre.data(), outputShapePre.size());
     const char *inputNamesPre[] = {"input"}, *outputNamesPre[] = {"output"};
-    runOptionsPre.UnsetTerminate();
-    if(shouldPreprocessTerminate){
-      *terminated = true;
+    if(terminating){
+      preprocessingEnd();
       return false;
     }
+    runOptionsPre.UnsetTerminate();
     sessionPre->Run(runOptionsPre, inputNamesPre, &inputTensor, 1, outputNamesPre, &outputTensorPre, 1);
   }catch(Ort::Exception& e){
-    *terminated = true;
+    preprocessingEnd();
     return false;
   }
+  preprocessingEnd();
   return true;
+}
+
+void Sam::preprocessingStart(){
+  preprocessing = true;
+}
+
+void Sam::preprocessingEnd(){
+  preprocessing = false;
+  terminating = false;
 }
 
 cv::Mat Sam::getMask(const std::list<cv::Point>& points, const std::list<cv::Point>& negativePoints, const cv::Rect& roi, int previousMaskIdx, bool isNextGetMask){
