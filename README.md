@@ -8,7 +8,7 @@ Download a zipped model folder from
 [MobileSAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/mobile_sam.zip), [ViT-Large SAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam_vit_l_0b3195.zip), and [ViT-Huge SAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam_vit_h_4b8939.zip).
 Put the unzipped model folder into sam-cpp-macos folder.
 
-![スクリーンショット 2023-09-15 22 14 30](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/8d2b1ade-1f38-4f9b-a40d-73607893c903)
+![スクリーンショット 2023-12-14 19 37 13](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/5f02fbe6-a523-4d05-a98f-ede8bc9da084)
 
 Edit the modelName in [test.cpp](https://github.com/ryouchinsa/sam-cpp-macos/blob/master/test.cpp).
 
@@ -18,8 +18,7 @@ std::string modelName = "mobile_sam";
 std::string pathEncoder = modelName + "/" + modelName + "_preprocess.onnx";
 std::string pathDecoder = modelName + "/" + modelName + ".onnx";
 std::cout<<"loadModel started"<<std::endl;
-bool terminated = false; // Check the preprocessing is terminated when the image is changed
-bool successLoadModel = sam.loadModel(pathEncoder, pathDecoder, std::thread::hardware_concurrency(), &terminated);
+bool successLoadModel = sam.loadModel(pathEncoder, pathDecoder, std::thread::hardware_concurrency());
 if(!successLoadModel){
   std::cout<<"loadModel error"<<std::endl;
   return 1;
@@ -34,7 +33,7 @@ cv::Mat image = cv::imread(imagePath, cv::IMREAD_COLOR);
 auto inputSize = sam.getInputSize();
 cv::resize(image, image, inputSize);
 std::cout<<"preprocessImage started"<<std::endl;
-bool successPreprocessImage = sam.preprocessImage(image, &terminated);
+bool successPreprocessImage = sam.preprocessImage(image);
 if(!successPreprocessImage){
   std::cout<<"preprocessImage error"<<std::endl;
   return 1;
@@ -68,11 +67,11 @@ Download the [ONNX Runtime v1.16.3](https://github.com/microsoft/onnxruntime/rel
 add_library(sam_cpp_lib SHARED sam.h sam.cpp)
 target_include_directories(
   sam_cpp_lib PUBLIC 
-  /Users/ryo/Downloads/onnxruntime-osx-universal2-1.15.1/include
+  /Users/ryo/Downloads/onnxruntime-osx-universal2-1.16.3/include
 )
 target_link_libraries(
   sam_cpp_lib PUBLIC
-  /Users/ryo/Downloads/onnxruntime-osx-universal2-1.15.1/lib/libonnxruntime.dylib
+  /Users/ryo/Downloads/onnxruntime-osx-universal2-1.16.3/lib/libonnxruntime.dylib
   ${OpenCV_LIBS}
 )
 ```
@@ -88,8 +87,8 @@ cmake --build build
 If the build fails, check the OpenCV_INCLUDE_DIRS and OpenCV_LIBS are correct.
 
 ```bash
--- The C compiler identification is AppleClang 14.0.3.14030022
--- The CXX compiler identification is AppleClang 14.0.3.14030022
+-- The C compiler identification is AppleClang 15.0.0.15000040
+-- The CXX compiler identification is AppleClang 15.0.0.15000040
 -- Detecting C compiler ABI info
 -- Detecting C compiler ABI info - done
 -- Check for working C compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc - skipped
@@ -103,7 +102,7 @@ If the build fails, check the OpenCV_INCLUDE_DIRS and OpenCV_LIBS are correct.
 -- Found OpenCV: /opt/homebrew/Cellar/opencv/4.8.0_6 (found version "4.8.0") 
 -- OpenCV_INCLUDE_DIRS = /opt/homebrew/Cellar/opencv/4.8.0_6/include/opencv4
 -- OpenCV_LIBS = opencv_calib3d;opencv_core;opencv_dnn;opencv_features2d;opencv_flann;opencv_gapi;opencv_highgui;opencv_imgcodecs;opencv_imgproc;opencv_ml;opencv_objdetect;opencv_photo;opencv_stitching;opencv_video;opencv_videoio;opencv_alphamat;opencv_aruco;opencv_bgsegm;opencv_bioinspired;opencv_ccalib;opencv_datasets;opencv_dnn_objdetect;opencv_dnn_superres;opencv_dpm;opencv_face;opencv_freetype;opencv_fuzzy;opencv_hfs;opencv_img_hash;opencv_intensity_transform;opencv_line_descriptor;opencv_mcc;opencv_optflow;opencv_phase_unwrapping;opencv_plot;opencv_quality;opencv_rapid;opencv_reg;opencv_rgbd;opencv_saliency;opencv_sfm;opencv_shape;opencv_stereo;opencv_structured_light;opencv_superres;opencv_surface_matching;opencv_text;opencv_tracking;opencv_videostab;opencv_viz;opencv_wechat_qrcode;opencv_xfeatures2d;opencv_ximgproc;opencv_xobjdetect;opencv_xphoto
--- Configuring done (7.9s)
+-- Configuring done (4.0s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/ryo/Downloads/sam-cpp-macos/build
 ```
