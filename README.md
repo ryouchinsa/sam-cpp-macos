@@ -62,7 +62,7 @@ previousMaskIdx++;
 cv::imwrite("mask-object1-click2.png", mask);
 ```
 
-Download the [ONNX Runtime v1.15.1](https://github.com/microsoft/onnxruntime/releases/download/v1.15.1/onnxruntime-osx-universal2-1.15.1.tgz). Edit the onnxruntime include path and lib path in CMakeLists.txt.
+Download the [ONNX Runtime v1.16.3](https://github.com/microsoft/onnxruntime/releases/download/v1.16.3/onnxruntime-osx-universal2-1.16.3.tgz). Edit the onnxruntime include path and lib path in CMakeLists.txt.
 
 ```bash
 add_library(sam_cpp_lib SHARED sam.h sam.cpp)
