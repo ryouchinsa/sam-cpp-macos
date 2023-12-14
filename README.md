@@ -1,153 +1,109 @@
-## Segment Anything CPP Wrapper
+## Segment Anything CPP Wrapper for macOS
 
-This project is to create a pure C++ inference api for [Segment Anything](https://github.com/facebookresearch/segment-anything) and [MobileSAM](https://github.com/ChaoningZhang/MobileSAM), with no dependence on Python during runtime. The code repository contains a C++ library with a test program to facilitate easy integration of the interface into other projects.
+This code is originated from [Segment Anything CPP Wrapper](https://github.com/dinglufe/segment-anything-cpp-wrapper) and implemented on macOS app [RectLabel](https://rectlabel.com). We customized the original code so that getMask() uses the previous mask result called as low_res_logits and retain the previous mask array for undo/redo actions. 
 
-Model loading takes approximately 10 or 1 seconds, and a single inference takes around 20ms, obtained using Intel Xeon W-2145 CPU (16 threads). During runtime, the interface may consume around 6GB or 1GB memory if running on CPU, and 16GB or 1GB if running on CUDA. The "or" here means values for "Segment Anything" or "MobileSAM".
+![sam_polygon](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/d0021004-3eb8-4873-ab88-284fcc149a5b)
 
-Currently, this program has been thoroughly tested on Windows and may encounter issues when running on Linux (no pre-compiled Linux version is provided).
+Download a zipped model folder from
+[MobileSAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/mobile_sam.zip), [ViT-Large SAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam_vit_l_0b3195.zip), and [ViT-Huge SAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam_vit_h_4b8939.zip).
+Put the unzipped model folder into sam-cpp-macos folder.
 
-### Test program - sam_cpp_test
-![](demo.jpg)
+![スクリーンショット 2023-12-14 19 37 13](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/5f02fbe6-a523-4d05-a98f-ede8bc9da084)
 
-Video demo [link](https://youtu.be/6NyobtZoPKc)
-
-Image by <a href="https://pixabay.com/users/brenda2102-30343687/?utm_source=link-attribution&amp;utm_medium=referral&amp;utm_campaign=image&amp;utm_content=7918031">Brenda</a> from <a href="https://pixabay.com//?utm_source=link-attribution&amp;utm_medium=referral&amp;utm_campaign=image&amp;utm_content=7918031">Pixabay</a> and key recorded by [KeyCastOW](https://github.com/brookhong/KeyCastOW)
-
-Usage:
-
-Download compressed file in the release page, unzip it, and run sam_cpp_test directly or in command line:
-
-```bash
-# Show help
-./sam_cpp_test -h
-
-# Example (change device, use CPU for preprocess and CUDA for sam)
-# If you have multiple GPUs, you can use CUDA:1, CUDA:2, etc.
-# All in cpu or all in cuda is also supported
-./sam_cpp_test -pre_device="cpu" -sam_device="cuda:0"
-
-# Example (default options)
-./sam_cpp_test -pre_model="models/sam_preprocess.onnx" -sam_model="models/sam_vit_h_4b8939.onnx" -image="images/input.jpg"
-
-# Example (use MobileSAM)
-./sam_cpp_test -pre_model="models/mobile_sam_preprocess.onnx" -sam_model="models/mobile_sam.onnx"
-
-# Example (change image)
-./sam_cpp_test -image="images/input2.jpg"
-```
-
-### C++ library - sam_cpp_lib
-
-A simple example:
+Edit the modelName in [test.cpp](https://github.com/ryouchinsa/sam-cpp-macos/blob/master/test.cpp).
 
 ```cpp
-Sam::Parameter param("sam_preprocess.onnx", "sam_vit_h_4b8939.onnx", std::thread::hardware_concurrency());
-param.providers[0].deviceType = 0; // cpu for preprocess
-param.providers[1].deviceType = 1; // CUDA for sam
-Sam sam(param);
+Sam sam;
+std::string modelName = "mobile_sam";
+std::string pathEncoder = modelName + "/" + modelName + "_preprocess.onnx";
+std::string pathDecoder = modelName + "/" + modelName + ".onnx";
+std::cout<<"loadModel started"<<std::endl;
+bool successLoadModel = sam.loadModel(pathEncoder, pathDecoder, std::thread::hardware_concurrency());
+if(!successLoadModel){
+  std::cout<<"loadModel error"<<std::endl;
+  return 1;
+}
+```
 
-// Use MobileSAM
-Sam::Parameter param("mobile_sam_preprocess.onnx", "mobile_sam.onnx", std::thread::hardware_concurrency());
+After loading the model, the preprocessing for the image begins. Because of CPU mode, it takes 2 seconds for "MobileSAM", 30 seconds for "ViT-Large SAM", and 60 seconds for "ViT-Huge SAM" on the Apple M1 device.
 
+```cpp
+std::string imagePath = "david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg";
+cv::Mat image = cv::imread(imagePath, cv::IMREAD_COLOR);
 auto inputSize = sam.getInputSize();
-cv::Mat image = cv::imread("input.jpg", -1);
 cv::resize(image, image, inputSize);
-sam.loadImage(image); // Will require 6GB memory if using CPU, 16GB if using CUDA
-
-// Using SAM with prompts (input: x, y)
-cv::Mat mask = sam.getMask({200, 300});
-cv::imwrite("output.png", mask);
-
-// Using SAM with multiple prompts (input: points, nagativePoints)
-cv::Mat mask = sam.getMask(points, nagativePoints); //Will require 1GB memory/graphics memory
-cv::imwrite("output-multi.png", mask);
-
-// Using SAM with box prompts (input: points, nagativePoints, box)
-// The points and negativePoints can be empty (use {} as parameter)
-cv::Rect box{444, 296, 171, 397};
-cv::Mat mask = sam.getMask(points, nagativePoints, box);
-cv::imwrite("output-box.png", mask);
-
-// Automatically generating masks (input: number of points each side)
-// Slow since running on CPU and the result is not as good as official demo
-cv::Mat maskAuto = sam.autoSegment({10, 10});
-cv::imwrite("output-auto.png", maskAuto);
+std::cout<<"preprocessImage started"<<std::endl;
+bool successPreprocessImage = sam.preprocessImage(image);
+if(!successPreprocessImage){
+  std::cout<<"preprocessImage error"<<std::endl;
+  return 1;
+}
 ```
 
-More details can be found in [test.cpp](test.cpp) and [sam.h](sam.h).
+When you click a foreground point or a background point, getMask() is called and the mask result is shown. From the second click, getMask() uses the previous mask result to increase the accuracy. To support undo/redo actions, Sam class instance retains the previous mask array. previousMaskIdx is used which previous mask to use in getMask(). For the first click in the image, previousMaskIdx is set to -1. When getMask() is called, previousMaskIdx is incremented. When you start labeling a new object in the image, isNextGetMask is set to true so that getMask() does not use the previous mask result. From the second click for the object, isNextGetMask is set to false to use the previous mask result.
 
-The "sam_vit_h_4b8939.onnx" and "mobile_sam.onnx" model can be exported using the official steps in [here](https://github.com/facebookresearch/segment-anything#onnx-export) and [here](https://github.com/ChaoningZhang/MobileSAM#onnx-export). The "sam_preprocess.onnx" and "mobile_sam_preprocess.onnx" models need to be exported using the [export_pre_model](export_pre_model.py) script (see below).
-
-### Export preprocessing model
-
-Segment Anything involves several [preprocessing steps](https://github.com/facebookresearch/segment-anything/blob/main/notebooks/onnx_model_example.ipynb), like this:
-
-```Python
-sam.to(device='cuda')
-predictor = SamPredictor(sam)
-predictor.set_image(image)
-image_embedding = predictor.get_image_embedding().cpu().numpy()
+```cpp
+std::cout<<"getMask started"<<std::endl;
+std::list<cv::Point> points, nagativePoints;
+cv::Rect roi;
+// 1st object and 1st click
+int previousMaskIdx = -1; // An index to use the previous mask result
+bool isNextGetMask = true; // Set true when start labeling a new object
+points.push_back({810, 550});
+cv::Mat mask = sam.getMask(points, nagativePoints, roi, previousMaskIdx, isNextGetMask);
+previousMaskIdx++;
+cv::imwrite("mask-object1-click1.png", mask);
+// 1st object and 2nd click
+isNextGetMask = false;
+points.push_back({940, 410});
+mask = sam.getMask(points, nagativePoints, roi, previousMaskIdx, isNextGetMask);
+previousMaskIdx++;
+cv::imwrite("mask-object1-click2.png", mask);
 ```
 
-The [export_pre_model](export_pre_model.py) script exports these operations as an ONNX model to enable execution independent of the Python environment. One limitation of this approach is that the exported model is dependent on a specific image size, so subsequent usage will require scaling images to that size. If you wish to modify the input image size (longest side not exceed 1024), the preprocessing model must be re-exported. Running the script requires installation of the [Segment Anything](https://github.com/facebookresearch/segment-anything#getting-started) and [MobileSAM](https://github.com/ChaoningZhang/MobileSAM#getting-started), and it requires approximately 23GB or 2GB of memory during execution for "Segment Anything" or "MobileSAM" respectively.
-
-The [export_pre_model](export_pre_model.py) script needs to be modified to switch between Segment-anything and MobileSAM:
-
-```Python
-# Uncomment the following lines to generate preprocessing model of Segment-anything
-# import segment_anything as SAM
-# # Download Segment-anything model "sam_vit_h_4b8939.pth" from https://github.com/facebookresearch/segment-anything#model-checkpoints
-# # and change the path below
-# checkpoint = 'sam_vit_h_4b8939.pth'
-# model_type = 'vit_h'
-# output_path = 'models/sam_preprocess.onnx'
-# quantize = True
-
-# Uncomment the following lines to generate preprocessing model of Mobile-SAM
-# Download Mobile-SAM model "mobile_sam.pt" from https://github.com/ChaoningZhang/MobileSAM/blob/master/weights/mobile_sam.pt
-checkpoint = 'mobile_sam.pt'
-model_type = 'vit_t'
-output_path = 'models/mobile_sam_preprocess.onnx'
-quantize = False
-```
+Download the [ONNX Runtime v1.16.3](https://github.com/microsoft/onnxruntime/releases/download/v1.16.3/onnxruntime-osx-universal2-1.16.3.tgz). Edit the onnxruntime include path and lib path in CMakeLists.txt.
 
 ```bash
-
-```bash
-
-### Build
-
-First, install the dependencies in [vcpkg](https://vcpkg.io):
-
-#### Windows
-
-```bash
-./vcpkg install opencv:x64-windows gflags:x64-windows onnxruntime-gpu:x64-windows
+add_library(sam_cpp_lib SHARED sam.h sam.cpp)
+target_include_directories(
+  sam_cpp_lib PUBLIC 
+  /Users/ryo/Downloads/onnxruntime-osx-universal2-1.16.3/include
+)
+target_link_libraries(
+  sam_cpp_lib PUBLIC
+  /Users/ryo/Downloads/onnxruntime-osx-universal2-1.16.3/lib/libonnxruntime.dylib
+  ${OpenCV_LIBS}
+)
 ```
 
-Then, build the project with cmake.
-```bash
-mkdir build
-cd build
-cmake .. -DCMAKE_TOOLCHAIN_FILE=[vcpkg root]/scripts/buildsystems/vcpkg.cmake
-```
-
-#### Linux
-
-Download [onnxruntime-linux-x64-1.14.1.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.14.1/onnxruntime-linux-x64-1.14.1.tgz)
+Build and run.
 
 ```bash
-./vcpkg install opencv:x64-linux gflags:x64-linux
+cmake -S . -B build
+cmake --build build
+./build/sam_cpp_test
 ```
 
-build the project with cmake.
+If the build fails, check the OpenCV_INCLUDE_DIRS and OpenCV_LIBS are correct.
 
 ```bash
-mkdir build
-cd build
-cmake .. -DCMAKE_TOOLCHAIN_FILE=[vcpkg root]/scripts/buildsystems/vcpkg.cmake -DONNXRUNTIME_ROOT_DIR=[onnxruntime-linux-x64-1.14.1 root]
+-- The C compiler identification is AppleClang 15.0.0.15000040
+-- The CXX compiler identification is AppleClang 15.0.0.15000040
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found OpenCV: /opt/homebrew/Cellar/opencv/4.8.0_6 (found version "4.8.0") 
+-- OpenCV_INCLUDE_DIRS = /opt/homebrew/Cellar/opencv/4.8.0_6/include/opencv4
+-- OpenCV_LIBS = opencv_calib3d;opencv_core;opencv_dnn;opencv_features2d;opencv_flann;opencv_gapi;opencv_highgui;opencv_imgcodecs;opencv_imgproc;opencv_ml;opencv_objdetect;opencv_photo;opencv_stitching;opencv_video;opencv_videoio;opencv_alphamat;opencv_aruco;opencv_bgsegm;opencv_bioinspired;opencv_ccalib;opencv_datasets;opencv_dnn_objdetect;opencv_dnn_superres;opencv_dpm;opencv_face;opencv_freetype;opencv_fuzzy;opencv_hfs;opencv_img_hash;opencv_intensity_transform;opencv_line_descriptor;opencv_mcc;opencv_optflow;opencv_phase_unwrapping;opencv_plot;opencv_quality;opencv_rapid;opencv_reg;opencv_rgbd;opencv_saliency;opencv_sfm;opencv_shape;opencv_stereo;opencv_structured_light;opencv_superres;opencv_surface_matching;opencv_text;opencv_tracking;opencv_videostab;opencv_viz;opencv_wechat_qrcode;opencv_xfeatures2d;opencv_ximgproc;opencv_xobjdetect;opencv_xphoto
+-- Configuring done (4.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/ryo/Downloads/sam-cpp-macos/build
 ```
 
-### License
-
-MIT
