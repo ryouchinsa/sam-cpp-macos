@@ -1,6 +1,6 @@
 ## Segment Anything CPP Wrapper for macOS
 
-This code is originated from [Segment Anything CPP Wrapper](https://github.com/dinglufe/segment-anything-cpp-wrapper) and implemented on macOS app [RectLabel](https://rectlabel.com). We customized the original code so that getMask() uses the previous mask result called as low_res_logits and retain the previous mask array for undo/redo actions. 
+This code is originated from [Segment Anything CPP Wrapper](https://github.com/dinglufe/segment-anything-cpp-wrapper) and implemented on macOS app [RectLabel](https://rectlabel.com). I customized the original code so that getMask() uses the previous mask result called as low_res_logits and retain the previous mask array for undo/redo actions. 
 
 ![sam_polygon](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/d0021004-3eb8-4873-ab88-284fcc149a5b)
 
@@ -107,8 +107,8 @@ If the build fails, check the OpenCV_INCLUDE_DIRS and OpenCV_LIBS are correct.
 -- Build files have been written to: /Users/ryo/Downloads/sam-cpp-macos/build
 ```
 
-To build on the Xcode, this is the settings on the Xcode.
-If you need more information, please let us know.
+To build on the Xcode, this is my settings on the Xcode.
+If you need more information, please let me know.
 
 - General -> Frameworks, Libraries, and Embedded Content
 
