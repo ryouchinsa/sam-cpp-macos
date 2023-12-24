@@ -108,7 +108,6 @@ If the build fails, check the OpenCV_INCLUDE_DIRS and OpenCV_LIBS are correct.
 ```
 
 To build on the Xcode, this is my settings on the Xcode.
-If you need more information, please let me know.
 
 - General -> Frameworks, Libraries, and Embedded Content
 
