@@ -107,3 +107,26 @@ If the build fails, check the OpenCV_INCLUDE_DIRS and OpenCV_LIBS are correct.
 -- Build files have been written to: /Users/ryo/Downloads/sam-cpp-macos/build
 ```
 
+To build on the Xcode, this is the settings on the Xcode.
+If you need more information, please let us know.
+
+- General -> Frameworks, Libraries, and Embedded Content
+
+![スクリーンショット 2023-12-24 15 07 26](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/bc86a5df-d9c3-454f-8f81-5fc28ef54b42)
+
+- Build Settings
+
+Header Search Paths
+`/Users/ryo/Downloads/onnxruntime-osx-universal2-1.16.3/include`
+
+Library Search Paths
+/Users/ryo/Downloads/onnxruntime-osx-universal2-1.16.3/lib
+
+![スクリーンショット 2023-12-24 15 15 56](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/ffa4f838-90cf-4be0-87bc-208a65c917f8)
+
+- Build Phases -> Embed Libraries
+
+![スクリーンショット 2023-12-24 15 16 33](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/ef3e23ad-0482-4f61-868f-3da63a9f0b2f)
+
+
+
