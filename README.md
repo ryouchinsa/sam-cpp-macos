@@ -114,10 +114,10 @@ To build on the Xcode, this is my settings on the Xcode.
 - Build Settings
 
 Header Search Paths
-`/Users/ryo/Downloads/onnxruntime-osx-universal2-1.16.3/include`
+`/Users/ryo/Downloads/onnxruntime-osx-universal2-1.17.1/include`
 
 Library Search Paths
-`/Users/ryo/Downloads/onnxruntime-osx-universal2-1.16.3/lib`
+`/Users/ryo/Downloads/onnxruntime-osx-universal2-1.17.1/lib`
 
 ![スクリーンショット 2023-12-24 15 15 56](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/ffa4f838-90cf-4be0-87bc-208a65c917f8)
 
