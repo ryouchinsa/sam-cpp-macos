@@ -1,6 +1,6 @@
 ## Segment Anything CPP Wrapper for macOS
 
-This code is originated from [Segment Anything CPP Wrapper](https://github.com/dinglufe/segment-anything-cpp-wrapper) and implemented on macOS app [RectLabel](https://rectlabel.com). We customized the original code so that getMask() uses the previous mask result called as low_res_logits and retain the previous mask array for undo/redo actions. 
+This code is originated from [Segment Anything CPP Wrapper](https://github.com/dinglufe/segment-anything-cpp-wrapper) and implemented on macOS app [RectLabel](https://rectlabel.com). I customized the original code so that getMask() uses the previous mask result called as low_res_logits and retain the previous mask array for undo/redo actions. 
 
 ![sam_polygon](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/d0021004-3eb8-4873-ab88-284fcc149a5b)
 
@@ -106,4 +106,26 @@ If the build fails, check the OpenCV_INCLUDE_DIRS and OpenCV_LIBS are correct.
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/ryo/Downloads/sam-cpp-macos/build
 ```
+
+To build on the Xcode, this is my settings on the Xcode.
+
+- General -> Frameworks, Libraries, and Embedded Content
+
+![スクリーンショット 2023-12-24 15 07 26](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/bc86a5df-d9c3-454f-8f81-5fc28ef54b42)
+
+- Build Settings
+
+Header Search Paths
+`/Users/ryo/Downloads/onnxruntime-osx-universal2-1.16.3/include`
+
+Library Search Paths
+`/Users/ryo/Downloads/onnxruntime-osx-universal2-1.16.3/lib`
+
+![スクリーンショット 2023-12-24 15 15 56](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/ffa4f838-90cf-4be0-87bc-208a65c917f8)
+
+- Build Phases -> Embed Libraries
+
+![スクリーンショット 2023-12-24 15 16 33](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/ef3e23ad-0482-4f61-868f-3da63a9f0b2f)
+
+
 
