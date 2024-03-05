@@ -1,6 +1,6 @@
 ## Segment Anything CPP Wrapper for macOS
 
-This code is originated from [Segment Anything CPP Wrapper](https://github.com/dinglufe/segment-anything-cpp-wrapper) and implemented on macOS app [RectLabel](https://rectlabel.com). We customized the original code so that getMask() uses the previous mask result called as low_res_logits and retain the previous mask array for undo/redo actions. 
+This code is originated from [Segment Anything CPP Wrapper](https://github.com/dinglufe/segment-anything-cpp-wrapper) and implemented on macOS app [RectLabel](https://rectlabel.com). We customized the original code so that getMask() uses the previous mask result and retain the previous mask array for undo/redo actions. 
 
 ![sam](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/8d41873d-c61c-43c6-a433-51fb5cd594c1)
 
@@ -21,10 +21,16 @@ Edit the modelName in [test.cpp](https://github.com/ryouchinsa/sam-cpp-macos/blo
 ```cpp
 Sam sam;
 std::string modelName = "mobile_sam";
+if(modelName.find("efficientsam") != std::string::npos){
+  sam.changeMode(EfficientSAM);
+}
 std::string pathEncoder = modelName + "/" + modelName + "_preprocess.onnx";
 std::string pathDecoder = modelName + "/" + modelName + ".onnx";
 std::cout<<"loadModel started"<<std::endl;
+std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 bool successLoadModel = sam.loadModel(pathEncoder, pathDecoder, std::thread::hardware_concurrency());
+std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+std::cout << "sec = " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()) / 1000000.0 <<std::endl;
 if(!successLoadModel){
   std::cout<<"loadModel error"<<std::endl;
   return 1;
