@@ -14,13 +14,13 @@ Sam::~Sam(){
 
 bool Sam::clearLoadModel(){
   try{
-    Ort::Session* pre = sessionPre.release();
-    Ort::Session* sam = sessionSam.release();
+    Ort::Session* pre = sessionEncoder.release();
+    Ort::Session* sam = sessionDecoder.release();
     delete pre;
     delete sam;
-    inputShapePre.resize(0);
-    outputShapePre.resize(0);
-    outputTensorValuesPre.resize(0);
+    inputShapeEncoder.resize(0);
+    outputShapeEncoder.resize(0);
+    outputTensorValuesEncoder.resize(0);
   }catch(Ort::Exception& e){
     return false;
   }
@@ -38,8 +38,12 @@ void Sam::resizePreviousMasks(int previousMaskIdx){
 }
 
 void Sam::terminatePreprocessing(){
-  runOptionsPre.SetTerminate();
+  runOptionsEncoder.SetTerminate();
   terminating = true;
+}
+
+void Sam::changeMode(SamMode modeTo){
+  mode = modeTo;
 }
 
 bool modelExists(const std::string& modelPath){
@@ -50,14 +54,14 @@ bool modelExists(const std::string& modelPath){
   return true;
 }
 
-bool Sam::loadModel(const std::string& preModelPath, const std::string& samModelPath, int threadsNumber){
+bool Sam::loadModel(const std::string& encoderPath, const std::string& decoderPath, int threadsNumber){
   try{
     loadingStart();
     if(!clearLoadModel()){
       loadingEnd();
       return false;
     }
-    if(!modelExists(preModelPath) || !modelExists(samModelPath)){
+    if(!modelExists(encoderPath) || !modelExists(decoderPath)){
       loadingEnd();
       return false;
     }
@@ -66,19 +70,27 @@ bool Sam::loadModel(const std::string& preModelPath, const std::string& samModel
       option.SetIntraOpNumThreads(threadsNumber);
       option.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
     }
-    sessionPre = std::make_unique<Ort::Session>(env, preModelPath.c_str(), sessionOptions[0]);
-    if(sessionPre->GetInputCount() != 1 || sessionPre->GetOutputCount() != 1){
+    sessionEncoder = std::make_unique<Ort::Session>(env, encoderPath.c_str(), sessionOptions[0]);
+    std::vector<const char*> inputNamesEncoder = getInputNamesEncoder();
+    std::vector<const char*> outputNamesEncoder = getOutputNamesEncoder();
+    if(sessionEncoder->GetInputCount() != inputNamesEncoder.size() || sessionEncoder->GetOutputCount() != outputNamesEncoder.size()){
       loadingEnd();
       return false;
     }
-    sessionSam = std::make_unique<Ort::Session>(env, samModelPath.c_str(), sessionOptions[1]);
-    if(sessionSam->GetInputCount() != 6 || sessionSam->GetOutputCount() != 3){
+    sessionDecoder = std::make_unique<Ort::Session>(env, decoderPath.c_str(), sessionOptions[1]);
+    std::vector<const char*> inputNamesDecoder = getInputNamesDecoder();
+    std::vector<const char*> outputNamesDecoder = getOutputNamesDecoder();
+    if(sessionDecoder->GetInputCount() != inputNamesDecoder.size() || sessionDecoder->GetOutputCount() != outputNamesDecoder.size()){
       loadingEnd();
       return false;
     }
-    inputShapePre = sessionPre->GetInputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
-    outputShapePre = sessionPre->GetOutputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
-    if(inputShapePre.size() != 4 || outputShapePre.size() != 4){
+    inputShapeEncoder = sessionEncoder->GetInputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
+    outputShapeEncoder = sessionEncoder->GetOutputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
+    if(mode == EfficientSAM){
+      inputShapeEncoder = {1, 3, 1024, 1024};
+      outputShapeEncoder = {1, 256, 64, 64};
+    }
+    if(inputShapeEncoder.size() != 4 || outputShapeEncoder.size() != 4){
       loadingEnd();
       return false;
     }
@@ -104,13 +116,16 @@ void Sam::loadingEnd(){
 }
 
 cv::Size Sam::getInputSize(){
-  return cv::Size((int)inputShapePre[3], (int)inputShapePre[2]);
+  return cv::Size((int)inputShapeEncoder[3], (int)inputShapeEncoder[2]);
 }
 
 bool Sam::preprocessImage(const cv::Mat& image){
+  if(mode == EfficientSAM){
+    return preprocessImageEfficientSAM(image);
+  }
   try{
     preprocessingStart();
-    if(image.size() != cv::Size((int)inputShapePre[3], (int)inputShapePre[2])){
+    if(image.size() != cv::Size((int)inputShapeEncoder[3], (int)inputShapeEncoder[2])){
       preprocessingEnd();
       return false;
     }
@@ -118,26 +133,67 @@ bool Sam::preprocessImage(const cv::Mat& image){
       preprocessingEnd();
       return false;
     }
-    std::vector<uint8_t> inputTensorValues(inputShapePre[0] * inputShapePre[1] * inputShapePre[2] * inputShapePre[3]);
-    for(int i = 0; i < inputShapePre[2]; i++){
-      for(int j = 0; j < inputShapePre[3]; j++){
-        inputTensorValues[i * inputShapePre[3] + j] = image.at<cv::Vec3b>(i, j)[2];
-        inputTensorValues[inputShapePre[2] * inputShapePre[3] + i * inputShapePre[3] + j] =
-            image.at<cv::Vec3b>(i, j)[1];
-        inputTensorValues[2 * inputShapePre[2] * inputShapePre[3] + i * inputShapePre[3] + j] =
-            image.at<cv::Vec3b>(i, j)[0];
+    std::vector<uint8_t> inputTensorValues(inputShapeEncoder[0] * inputShapeEncoder[1] * inputShapeEncoder[2] * inputShapeEncoder[3]);
+    for(int i = 0; i < inputShapeEncoder[2]; i++){
+      for(int j = 0; j < inputShapeEncoder[3]; j++){
+        int64_t pos = i * inputShapeEncoder[3] + j;
+        int64_t size = inputShapeEncoder[2] * inputShapeEncoder[3];
+        inputTensorValues[pos + size * 0] = image.at<cv::Vec3b>(i, j)[2];
+        inputTensorValues[pos + size * 1] = image.at<cv::Vec3b>(i, j)[1];
+        inputTensorValues[pos + size * 2] = image.at<cv::Vec3b>(i, j)[0];
       }
     }
-    auto inputTensor = Ort::Value::CreateTensor<uint8_t>(memoryInfo, inputTensorValues.data(), inputTensorValues.size(), inputShapePre.data(), inputShapePre.size());
-    outputTensorValuesPre = std::vector<float>(outputShapePre[0] * outputShapePre[1] * outputShapePre[2] * outputShapePre[3]);
-    auto outputTensorPre = Ort::Value::CreateTensor<float>(memoryInfo, outputTensorValuesPre.data(), outputTensorValuesPre.size(), outputShapePre.data(), outputShapePre.size());
-    const char *inputNamesPre[] = {"input"}, *outputNamesPre[] = {"output"};
+    auto inputTensor = Ort::Value::CreateTensor<uint8_t>(memoryInfo, inputTensorValues.data(), inputTensorValues.size(), inputShapeEncoder.data(), inputShapeEncoder.size());
+    outputTensorValuesEncoder = std::vector<float>(outputShapeEncoder[0] * outputShapeEncoder[1] * outputShapeEncoder[2] * outputShapeEncoder[3]);
+    auto outputTensor = Ort::Value::CreateTensor<float>(memoryInfo, outputTensorValuesEncoder.data(), outputTensorValuesEncoder.size(), outputShapeEncoder.data(), outputShapeEncoder.size());
     if(terminating){
       preprocessingEnd();
       return false;
     }
-    runOptionsPre.UnsetTerminate();
-    sessionPre->Run(runOptionsPre, inputNamesPre, &inputTensor, 1, outputNamesPre, &outputTensorPre, 1);
+    runOptionsEncoder.UnsetTerminate();
+    std::vector<const char*> inputNames = getInputNamesEncoder();
+    std::vector<const char*> outputNames = getOutputNamesEncoder();
+    sessionEncoder->Run(runOptionsEncoder, inputNames.data(), &inputTensor, 1, outputNames.data(), &outputTensor, 1);
+  }catch(Ort::Exception& e){
+    preprocessingEnd();
+    return false;
+  }
+  preprocessingEnd();
+  return true;
+}
+
+bool Sam::preprocessImageEfficientSAM(const cv::Mat& image){
+  try{
+    preprocessingStart();
+    if(image.size() != cv::Size((int)inputShapeEncoder[3], (int)inputShapeEncoder[2])){
+      preprocessingEnd();
+      return false;
+    }
+    if(image.channels() != 3){
+      preprocessingEnd();
+      return false;
+    }
+    std::vector<float> inputTensorValues(inputShapeEncoder[0] * inputShapeEncoder[1] * inputShapeEncoder[2] * inputShapeEncoder[3]);
+    for(int i = 0; i < inputShapeEncoder[2]; i++){
+      for(int j = 0; j < inputShapeEncoder[3]; j++){
+        int64_t pos = i * inputShapeEncoder[3] + j;
+        int64_t size = inputShapeEncoder[2] * inputShapeEncoder[3];
+        inputTensorValues[pos + size * 0] = image.at<cv::Vec3b>(i, j)[2] / 255.0;
+        inputTensorValues[pos + size * 1] = image.at<cv::Vec3b>(i, j)[1] / 255.0;
+        inputTensorValues[pos + size * 2] = image.at<cv::Vec3b>(i, j)[0] / 255.0;
+      }
+    }
+    auto inputTensor = Ort::Value::CreateTensor<float>(memoryInfo, inputTensorValues.data(), inputTensorValues.size(), inputShapeEncoder.data(), inputShapeEncoder.size());
+    outputTensorValuesEncoder = std::vector<float>(outputShapeEncoder[0] * outputShapeEncoder[1] * outputShapeEncoder[2] * outputShapeEncoder[3]);
+    auto outputTensor = Ort::Value::CreateTensor<float>(memoryInfo, outputTensorValuesEncoder.data(), outputTensorValuesEncoder.size(), outputShapeEncoder.data(), outputShapeEncoder.size());
+    if(terminating){
+      preprocessingEnd();
+      return false;
+    }
+    runOptionsEncoder.UnsetTerminate();
+    std::vector<const char*> inputNames = getInputNamesEncoder();
+    std::vector<const char*> outputNames = getOutputNamesEncoder();
+    sessionEncoder->Run(runOptionsEncoder, inputNames.data(), &inputTensor, 1, outputNames.data(), &outputTensor, 1);
   }catch(Ort::Exception& e){
     preprocessingEnd();
     return false;
@@ -155,7 +211,10 @@ void Sam::preprocessingEnd(){
   terminating = false;
 }
 
-cv::Mat Sam::getMask(const std::list<cv::Point>& points, const std::list<cv::Point>& negativePoints, const cv::Rect& roi, int previousMaskIdx, bool isNextGetMask){
+cv::Mat Sam::getMask(const std::list<cv::Point>& points, const std::list<cv::Point>& negativePoints, const std::list<cv::Rect> &rects, int previousMaskIdx, bool isNextGetMask){
+  if(mode == EfficientSAM){
+    return getMaskEfficientSAM(points, rects);
+  }
   const size_t maskInputSize = 256 * 256;
   float maskInputValues[maskInputSize];
   memset(maskInputValues, 0, sizeof(maskInputValues));
@@ -178,7 +237,7 @@ cv::Mat Sam::getMask(const std::list<cv::Point>& points, const std::list<cv::Poi
     inputPointValues.push_back((float)point.y);
     inputLabelValues.push_back(0);
   }
-  if(!roi.empty()){
+  for(auto& roi : rects){
     inputPointValues.push_back((float)roi.x);
     inputPointValues.push_back((float)roi.y);
     inputLabelValues.push_back(2);
@@ -192,32 +251,140 @@ cv::Mat Sam::getMask(const std::list<cv::Point>& points, const std::list<cv::Poi
   maskInputShape = {1, 1, 256, 256},
   hasMaskInputShape = {1},
   origImSizeShape = {2};
-  float orig_im_size_values[] = {(float)inputShapePre[2], (float)inputShapePre[3]};
-  std::vector<Ort::Value> inputTensorsSam;
-  inputTensorsSam.push_back(Ort::Value::CreateTensor<float>(memoryInfo, (float*)outputTensorValuesPre.data(), outputTensorValuesPre.size(), outputShapePre.data(), outputShapePre.size()));
-  inputTensorsSam.push_back(Ort::Value::CreateTensor<float>(memoryInfo, inputPointValues.data(), 2 * numPoints, inputPointShape.data(), inputPointShape.size()));
-  inputTensorsSam.push_back(Ort::Value::CreateTensor<float>(memoryInfo, inputLabelValues.data(), numPoints, pointLabelsShape.data(), pointLabelsShape.size()));
+  float orig_im_size_values[] = {(float)inputShapeEncoder[2], (float)inputShapeEncoder[3]};
+  std::vector<Ort::Value> inputTensors;
+  inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, (float*)outputTensorValuesEncoder.data(), outputTensorValuesEncoder.size(), outputShapeEncoder.data(), outputShapeEncoder.size()));
+  inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, inputPointValues.data(), 2 * numPoints, inputPointShape.data(), inputPointShape.size()));
+  inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, inputLabelValues.data(), numPoints, pointLabelsShape.data(), pointLabelsShape.size()));
   if(hasMaskValues[0] == 1){
-      inputTensorsSam.push_back(Ort::Value::CreateTensor<float>(memoryInfo, previousMaskInputValues.data(), maskInputSize, maskInputShape.data(), maskInputShape.size()));
+    inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, previousMaskInputValues.data(), maskInputSize, maskInputShape.data(), maskInputShape.size()));
   }else{
-      inputTensorsSam.push_back(Ort::Value::CreateTensor<float>(memoryInfo, maskInputValues, maskInputSize, maskInputShape.data(), maskInputShape.size()));
+    inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, maskInputValues, maskInputSize, maskInputShape.data(), maskInputShape.size()));
   }
-  inputTensorsSam.push_back(Ort::Value::CreateTensor<float>(memoryInfo, hasMaskValues, 1, hasMaskInputShape.data(), hasMaskInputShape.size()));
-  inputTensorsSam.push_back(Ort::Value::CreateTensor<float>(memoryInfo, orig_im_size_values, 2, origImSizeShape.data(), origImSizeShape.size()));
-  Ort::RunOptions runOptionsSam;
-  auto outputTensorsSam = sessionSam->Run(runOptionsSam, inputNamesSam, inputTensorsSam.data(), inputTensorsSam.size(), outputNamesSam, 3);
-  auto outputMasksValues = outputTensorsSam[0].GetTensorMutableData<float>();
-  cv::Mat outputMaskSam = cv::Mat((int)inputShapePre[2], (int)inputShapePre[3], CV_8UC1);
-  for (int i = 0; i < outputMaskSam.rows; i++) {
-    for (int j = 0; j < outputMaskSam.cols; j++) {
-      outputMaskSam.at<uchar>(i, j) = outputMasksValues[i * outputMaskSam.cols + j] > 0 ? 255 : 0;
+  inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, hasMaskValues, 1, hasMaskInputShape.data(), hasMaskInputShape.size()));
+  inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, orig_im_size_values, 2, origImSizeShape.data(), origImSizeShape.size()));
+  cv::Mat outputMask = cv::Mat((int)inputShapeEncoder[2], (int)inputShapeEncoder[3], CV_8UC1);
+  try{
+    Ort::RunOptions runOptionsDecoder;
+    std::vector<const char*> inputNames = getInputNamesDecoder();
+    std::vector<const char*> outputNames = getOutputNamesDecoder();
+    auto outputTensors = sessionDecoder->Run(runOptionsDecoder, inputNames.data(), inputTensors.data(), inputTensors.size(), outputNames.data(), 3);
+    auto outputMaskValues = outputTensors[0].GetTensorMutableData<float>();
+    for (int i = 0; i < outputMask.rows; i++) {
+      for (int j = 0; j < outputMask.cols; j++) {
+        outputMask.at<uchar>(i, j) = outputMaskValues[i * outputMask.cols + j] > 0 ? 255 : 0;
+      }
     }
+    previousMaskInputValues = std::vector<float>(maskInputSize);
+    auto low_res_logits = outputTensors[2].GetTensorMutableData<float>();
+    for (int i = 0; i < maskInputSize; i++) {
+        previousMaskInputValues[i] = low_res_logits[i];
+    }
+    previousMasks.push_back(previousMaskInputValues);
+  }catch(Ort::Exception& e){
+    return outputMask;
   }
-  auto low_res_logits = outputTensorsSam[2].GetTensorMutableData<float>();
-  previousMaskInputValues = std::vector<float>(maskInputSize);
-  for (int i = 0; i < maskInputSize; i++) {
-      previousMaskInputValues[i] = low_res_logits[i];
+  return outputMask;
+}
+
+cv::Mat Sam::getMaskEfficientSAM(const std::list<cv::Point>& points, const std::list<cv::Rect> &rects){
+  std::vector<float> inputPointValues, inputLabelValues;
+  for(auto& point : points){
+    inputPointValues.push_back((float)point.x);
+    inputPointValues.push_back((float)point.y);
+    inputLabelValues.push_back(1);
   }
-  previousMasks.push_back(previousMaskInputValues);
-  return outputMaskSam;
+  for(auto& roi : rects){
+    inputPointValues.push_back((float)roi.x);
+    inputPointValues.push_back((float)roi.y);
+    inputLabelValues.push_back(2);
+    inputPointValues.push_back((float)roi.br().x);
+    inputPointValues.push_back((float)roi.br().y);
+    inputLabelValues.push_back(3);
+  }
+  const int numPoints = (int)inputLabelValues.size();
+  std::vector<int64_t> inputPointShape = {1, 1, numPoints, 2},
+  pointLabelsShape = {1, 1, numPoints},
+  origImSizeShape = {2};
+  int64_t orig_im_size_values[] = {inputShapeEncoder[2], inputShapeEncoder[3]};
+  std::vector<Ort::Value> inputTensors;
+  inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, (float*)outputTensorValuesEncoder.data(), outputTensorValuesEncoder.size(), outputShapeEncoder.data(), outputShapeEncoder.size()));
+  inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, inputPointValues.data(), 2 * numPoints, inputPointShape.data(), inputPointShape.size()));
+  inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, inputLabelValues.data(), numPoints, pointLabelsShape.data(), pointLabelsShape.size()));
+  inputTensors.push_back(Ort::Value::CreateTensor<int64_t>(memoryInfo, orig_im_size_values, 2, origImSizeShape.data(), origImSizeShape.size()));
+  cv::Mat outputMask = cv::Mat((int)inputShapeEncoder[2], (int)inputShapeEncoder[3], CV_8UC1);
+  try{
+    Ort::RunOptions runOptionsDecoder;
+    std::vector<const char*> inputNames = getInputNamesDecoder();
+    std::vector<const char*> outputNames = getOutputNamesDecoder();
+    auto outputTensors = sessionDecoder->Run(runOptionsDecoder, inputNames.data(), inputTensors.data(), inputTensors.size(), outputNames.data(), 2);
+    auto outputMaskValues = outputTensors[0].GetTensorMutableData<float>();
+    for (int i = 0; i < outputMask.rows; i++) {
+      for (int j = 0; j < outputMask.cols; j++) {
+        outputMask.at<uchar>(i, j) = outputMaskValues[i * outputMask.cols + j] > 0 ? 255 : 0;
+      }
+    }
+    const size_t maskInputSize = 256 * 256;
+    std::vector<float> previousMaskInputValues = std::vector<float>(maskInputSize);
+    previousMasks.push_back(previousMaskInputValues);
+  }catch(Ort::Exception& e){
+    return outputMask;
+  }
+  return outputMask;
+}
+
+std::vector<const char*> Sam::getInputNamesEncoder(){
+  if(mode == EfficientSAM){
+    return {
+      "batched_images"
+    };
+  }
+  return {
+    "input"
+  };
+}
+
+std::vector<const char*> Sam::getOutputNamesEncoder(){
+  if(mode == EfficientSAM){
+    return {
+      "image_embeddings"
+    };
+  }
+  return {
+    "output"
+  };
+}
+
+std::vector<const char*> Sam::getInputNamesDecoder(){
+  if(mode == EfficientSAM){
+    return {
+      "image_embeddings",
+      "batched_point_coords",
+      "batched_point_labels",
+      "orig_im_size"
+    };
+  }
+  return {
+    "image_embeddings",
+    "point_coords",
+    "point_labels",
+    "mask_input",
+    "has_mask_input",
+    "orig_im_size"
+  };
+}
+
+std::vector<const char*> Sam::getOutputNamesDecoder(){
+  if(mode == EfficientSAM){
+    return {
+      "output_masks",
+      "iou_predictions",
+      "low_res_masks"
+    };
+  }
+  return {
+    "masks",
+    "iou_predictions",
+    "low_res_masks"
+  };
 }

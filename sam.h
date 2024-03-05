@@ -7,18 +7,21 @@
 #include <fstream>
 #include <iostream>
 
+enum SamMode {
+  SAM,
+  EfficientSAM,
+};
+
 class Sam {
-  std::unique_ptr<Ort::Session> sessionPre, sessionSam;
+  std::unique_ptr<Ort::Session> sessionEncoder, sessionDecoder;
   Ort::Env env{ORT_LOGGING_LEVEL_WARNING, "test"};
   Ort::SessionOptions sessionOptions[2];
-  Ort::RunOptions runOptionsPre;
+  Ort::RunOptions runOptionsEncoder;
   Ort::MemoryInfo memoryInfo{Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault)};
-  std::vector<int64_t> inputShapePre, outputShapePre;
-  std::vector<float> outputTensorValuesPre;
+  std::vector<int64_t> inputShapeEncoder, outputShapeEncoder;
+  std::vector<float> outputTensorValuesEncoder;
   std::vector<std::vector<float>> previousMasks;
-  const char *inputNamesSam[6]{"image_embeddings", "point_coords", "point_labels",
-                               "mask_input", "has_mask_input", "orig_im_size"},
-  *outputNamesSam[3]{"masks", "iou_predictions", "low_res_masks"};
+  SamMode mode = SAM;
   bool loadingModel = false;
   bool preprocessing = false;
   bool terminating = false;
@@ -30,14 +33,22 @@ class Sam {
   void clearPreviousMasks();
   void resizePreviousMasks(int previousMaskIdx);
   void terminatePreprocessing();
-  bool loadModel(const std::string& preModelPath, const std::string& samModelPath, int threadsNumber);
+  void changeMode(SamMode modeTo);
+  bool loadModel(const std::string& encoderPath, const std::string& decoderPath, int threadsNumber);
   void loadingStart();
   void loadingEnd();
   cv::Size getInputSize();
   bool preprocessImage(const cv::Mat& image);
+  bool preprocessImageEfficientSAM(const cv::Mat& image);
   void preprocessingStart();
   void preprocessingEnd();
-  cv::Mat getMask(const std::list<cv::Point>& points, const std::list<cv::Point>& negativePoints, const cv::Rect& roi, int previousMaskIdx, bool isNextGetMask);
+  cv::Mat getMask(const std::list<cv::Point>& points, const std::list<cv::Point>& negativePoints, const std::list<cv::Rect> &rects, int previousMaskIdx, bool isNextGetMask);
+  cv::Mat getMaskEfficientSAM(const std::list<cv::Point>& points, const std::list<cv::Rect> &rects);
+  std::vector<const char*> getInputNamesEncoder();
+  std::vector<const char*> getOutputNamesEncoder();
+  std::vector<const char*> getInputNamesDecoder();
+  std::vector<const char*> getOutputNamesDecoder();
+  
 };
 
 #endif
