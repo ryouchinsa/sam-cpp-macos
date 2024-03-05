@@ -53,38 +53,46 @@ if(!successPreprocessImage){
 }
 ```
 
-When you click a foreground point or a background point, getMask() is called and the mask result is shown. From the second click, getMask() uses the previous mask result to increase the accuracy. To support undo/redo actions, Sam class instance retains the previous mask array. previousMaskIdx is used which previous mask to use in getMask(). For the first click in the image, previousMaskIdx is set to -1. When getMask() is called, previousMaskIdx is incremented. When you start labeling a new object in the image, isNextGetMask is set to true so that getMask() does not use the previous mask result. From the second click for the object, isNextGetMask is set to false to use the previous mask result.
+To support undo/redo actions, Sam class instance retains the previous mask array.  For the first click, previousMaskIdx is set to -1. When getMask() is called, previousMaskIdx is incremented. When you start labeling a new object, isNextGetMask is set to true so that getMask() does not use the previous mask result. From the second click for the object, isNextGetMask is set to false to use the previous mask result.
 
 ```cpp
 std::cout<<"getMask started"<<std::endl;
 std::list<cv::Point> points, nagativePoints;
-cv::Rect roi;
-// 1st object and 1st click
-int previousMaskIdx = -1; // An index to use the previous mask result
-bool isNextGetMask = true; // Set true when start labeling a new object
-points.push_back({810, 550});
-cv::Mat mask = sam.getMask(points, nagativePoints, roi, previousMaskIdx, isNextGetMask);
+std::list<cv::Rect> rects;
+// box
+int previousMaskIdx = -1;
+bool isNextGetMask = true;
+cv::Rect rect = cv::Rect(1215 * inputSize.width / imageSize.width,
+                         125 * inputSize.height / imageSize.height,
+                         508 * inputSize.width / imageSize.width,
+                         436 * inputSize.height / imageSize.height);
+rects.push_back(rect);
+cv::Mat mask = sam.getMask(points, nagativePoints, rects, previousMaskIdx, isNextGetMask);
 previousMaskIdx++;
-cv::imwrite("mask-object1-click1.png", mask);
-// 1st object and 2nd click
+cv::resize(mask, mask, imageSize, 0, 0, cv::INTER_NEAREST);
+cv::imwrite("mask-box.png", mask);
+// positive point
 isNextGetMask = false;
-points.push_back({940, 410});
-mask = sam.getMask(points, nagativePoints, roi, previousMaskIdx, isNextGetMask);
+cv::Point point = cv::Point(1255 * inputSize.width / imageSize.width,
+                            360 * inputSize.height / imageSize.height);
+points.push_back(point);
+mask = sam.getMask(points, nagativePoints, rects, previousMaskIdx, isNextGetMask);
 previousMaskIdx++;
-cv::imwrite("mask-object1-click2.png", mask);
+cv::resize(mask, mask, imageSize, 0, 0, cv::INTER_NEAREST);
+cv::imwrite("mask-positive_point.png", mask);
 ```
 
-Download the [ONNX Runtime v1.16.3](https://github.com/microsoft/onnxruntime/releases/download/v1.16.3/onnxruntime-osx-universal2-1.16.3.tgz). Edit the onnxruntime include path and lib path in CMakeLists.txt.
+Download the [ONNX Runtime v1.17.1](https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-osx-universal2-1.17.1.tgz). Edit the onnxruntime include path and lib path in CMakeLists.txt.
 
 ```bash
 add_library(sam_cpp_lib SHARED sam.h sam.cpp)
 target_include_directories(
   sam_cpp_lib PUBLIC 
-  /Users/ryo/Downloads/onnxruntime-osx-universal2-1.16.3/include
+  /Users/ryo/Downloads/onnxruntime-osx-universal2-1.17.1/include
 )
 target_link_libraries(
   sam_cpp_lib PUBLIC
-  /Users/ryo/Downloads/onnxruntime-osx-universal2-1.16.3/lib/libonnxruntime.dylib
+  /Users/ryo/Downloads/onnxruntime-osx-universal2-1.17.1/lib/libonnxruntime.dylib
   ${OpenCV_LIBS}
 )
 ```
@@ -95,29 +103,6 @@ Build and run.
 cmake -S . -B build
 cmake --build build
 ./build/sam_cpp_test
-```
-
-If the build fails, check the OpenCV_INCLUDE_DIRS and OpenCV_LIBS are correct.
-
-```bash
--- The C compiler identification is AppleClang 15.0.0.15000040
--- The CXX compiler identification is AppleClang 15.0.0.15000040
--- Detecting C compiler ABI info
--- Detecting C compiler ABI info - done
--- Check for working C compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc - skipped
--- Detecting C compile features
--- Detecting C compile features - done
--- Detecting CXX compiler ABI info
--- Detecting CXX compiler ABI info - done
--- Check for working CXX compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ - skipped
--- Detecting CXX compile features
--- Detecting CXX compile features - done
--- Found OpenCV: /opt/homebrew/Cellar/opencv/4.8.0_6 (found version "4.8.0") 
--- OpenCV_INCLUDE_DIRS = /opt/homebrew/Cellar/opencv/4.8.0_6/include/opencv4
--- OpenCV_LIBS = opencv_calib3d;opencv_core;opencv_dnn;opencv_features2d;opencv_flann;opencv_gapi;opencv_highgui;opencv_imgcodecs;opencv_imgproc;opencv_ml;opencv_objdetect;opencv_photo;opencv_stitching;opencv_video;opencv_videoio;opencv_alphamat;opencv_aruco;opencv_bgsegm;opencv_bioinspired;opencv_ccalib;opencv_datasets;opencv_dnn_objdetect;opencv_dnn_superres;opencv_dpm;opencv_face;opencv_freetype;opencv_fuzzy;opencv_hfs;opencv_img_hash;opencv_intensity_transform;opencv_line_descriptor;opencv_mcc;opencv_optflow;opencv_phase_unwrapping;opencv_plot;opencv_quality;opencv_rapid;opencv_reg;opencv_rgbd;opencv_saliency;opencv_sfm;opencv_shape;opencv_stereo;opencv_structured_light;opencv_superres;opencv_surface_matching;opencv_text;opencv_tracking;opencv_videostab;opencv_viz;opencv_wechat_qrcode;opencv_xfeatures2d;opencv_ximgproc;opencv_xobjdetect;opencv_xphoto
--- Configuring done (4.0s)
--- Generating done (0.0s)
--- Build files have been written to: /Users/ryo/Downloads/sam-cpp-macos/build
 ```
 
 To build on the Xcode, this is my settings on the Xcode.
