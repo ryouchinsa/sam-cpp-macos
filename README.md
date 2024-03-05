@@ -14,7 +14,7 @@ Download a zipped model folder from below.
 
 Put the unzipped model folder into sam-cpp-macos folder.
 
-![スクリーンショット 2023-12-14 19 37 13](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/5f02fbe6-a523-4d05-a98f-ede8bc9da084)
+![スクリーンショット 2024-03-05 19 44 41](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/0cd464c4-c997-4ba4-a093-8ffc5f3de08e)
 
 Edit the modelName in [test.cpp](https://github.com/ryouchinsa/sam-cpp-macos/blob/master/test.cpp).
 
