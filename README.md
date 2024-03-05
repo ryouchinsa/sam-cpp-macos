@@ -27,25 +27,26 @@ if(modelName.find("efficientsam") != std::string::npos){
 std::string pathEncoder = modelName + "/" + modelName + "_preprocess.onnx";
 std::string pathDecoder = modelName + "/" + modelName + ".onnx";
 std::cout<<"loadModel started"<<std::endl;
-std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 bool successLoadModel = sam.loadModel(pathEncoder, pathDecoder, std::thread::hardware_concurrency());
-std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-std::cout << "sec = " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()) / 1000000.0 <<std::endl;
 if(!successLoadModel){
   std::cout<<"loadModel error"<<std::endl;
   return 1;
 }
 ```
 
-After loading the model, the preprocessing for the image begins. Because of CPU mode, it takes 2 seconds for "MobileSAM", 30 seconds for "ViT-Large SAM", and 60 seconds for "ViT-Huge SAM" on the Apple M1 device.
+After loading the model, the preprocessing for the image begins. Because of CPU mode, it takes 2 seconds for "MobileSAM" and 30 seconds for "ViT-Large SAM" on the Apple M1 device.
 
 ```cpp
+std::cout<<"preprocessImage started"<<std::endl;
 std::string imagePath = "david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg";
 cv::Mat image = cv::imread(imagePath, cv::IMREAD_COLOR);
-auto inputSize = sam.getInputSize();
+cv::Size imageSize = cv::Size(image.cols, image.rows);
+cv::Size inputSize = sam.getInputSize();
 cv::resize(image, image, inputSize);
-std::cout<<"preprocessImage started"<<std::endl;
+std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 bool successPreprocessImage = sam.preprocessImage(image);
+std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+std::cout << "sec = " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()) / 1000000.0 <<std::endl;
 if(!successPreprocessImage){
   std::cout<<"preprocessImage error"<<std::endl;
   return 1;
