@@ -105,11 +105,11 @@ cmake --build build
 ./build/sam_cpp_test
 ```
 
-To build on the Xcode, this is my settings on the Xcode.
+To build on the Xcode, this is our settings on the Xcode.
 
 - General -> Frameworks, Libraries, and Embedded Content
 
-![スクリーンショット 2023-12-24 15 07 26](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/bc86a5df-d9c3-454f-8f81-5fc28ef54b42)
+![スクリーンショット 2024-03-06 1 36 12](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/f13b4006-ad18-4a32-92cd-179804682887)
 
 - Build Settings
 
@@ -119,11 +119,10 @@ Header Search Paths
 Library Search Paths
 `/Users/ryo/Downloads/onnxruntime-osx-universal2-1.17.1/lib`
 
-![スクリーンショット 2023-12-24 15 15 56](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/ffa4f838-90cf-4be0-87bc-208a65c917f8)
-
 - Build Phases -> Embed Libraries
 
-![スクリーンショット 2023-12-24 15 16 33](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/ef3e23ad-0482-4f61-868f-3da63a9f0b2f)
+![スクリーンショット 2024-03-06 1 37 32](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/13ccda41-5d13-4e73-8b53-830ca0efa0b4)
+
 
 
 
