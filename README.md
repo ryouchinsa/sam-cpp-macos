@@ -6,6 +6,8 @@ This code is originated from [Segment Anything CPP Wrapper](https://github.com/d
 
 Download a zipped model folder from below.
 - [MobileSAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/mobile_sam.zip)
+- [EdgeSAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/edge_sam.zip)
+- [EdgeSAM-3x](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/edge_sam_3x.zip)
 - [Tiny EfficientSAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/efficientsam_ti.zip)
 - [Small EfficientSAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/efficientsam_s.zip)
 - [ViT-Base SAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam_vit_b_01ec64.zip)
