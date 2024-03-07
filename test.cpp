@@ -4,9 +4,11 @@
 
 int main(int argc, char** argv) {
   Sam sam;
-  std::string modelName = "mobile_sam";
+  std::string modelName = "edge_sam";
   if(modelName.find("efficientsam") != std::string::npos){
     sam.changeMode(EfficientSAM);
+  }else if(modelName.find("edge_sam") != std::string::npos){
+    sam.changeMode(EdgeSAM);
   }
   std::string pathEncoder = modelName + "/" + modelName + "_preprocess.onnx";
   std::string pathDecoder = modelName + "/" + modelName + ".onnx";

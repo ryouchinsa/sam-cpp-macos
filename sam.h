@@ -10,6 +10,7 @@
 enum SamMode {
   SAM,
   EfficientSAM,
+  EdgeSAM,
 };
 
 class Sam {
@@ -38,17 +39,17 @@ class Sam {
   void loadingStart();
   void loadingEnd();
   cv::Size getInputSize();
+  auto getEncoderInputTensor(const cv::Mat& image);
   bool preprocessImage(const cv::Mat& image);
-  bool preprocessImageEfficientSAM(const cv::Mat& image);
   void preprocessingStart();
   void preprocessingEnd();
+  std::vector<int64_t> getInputPointShape(int numPoints);
+  std::vector<int64_t> getInputLabelShape(int numPoints);
   cv::Mat getMask(const std::list<cv::Point>& points, const std::list<cv::Point>& negativePoints, const std::list<cv::Rect> &rects, int previousMaskIdx, bool isNextGetMask);
-  cv::Mat getMaskEfficientSAM(const std::list<cv::Point>& points, const std::list<cv::Rect> &rects);
   std::vector<const char*> getInputNamesEncoder();
   std::vector<const char*> getOutputNamesEncoder();
   std::vector<const char*> getInputNamesDecoder();
   std::vector<const char*> getOutputNamesDecoder();
-  
 };
 
 #endif
