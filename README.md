@@ -16,15 +16,17 @@ Download a zipped model folder from below.
 
 Put the unzipped model folder into sam-cpp-macos folder.
 
-![スクリーンショット 2024-03-05 19 44 41](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/0cd464c4-c997-4ba4-a093-8ffc5f3de08e)
+![スクリーンショット 2024-03-07 15 55 39](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/b49f101c-b9a1-444e-a773-ecbee3d46f67)
 
 Edit the modelName in [test.cpp](https://github.com/ryouchinsa/sam-cpp-macos/blob/master/test.cpp).
 
 ```cpp
 Sam sam;
-std::string modelName = "mobile_sam";
+std::string modelName = "edge_sam";
 if(modelName.find("efficientsam") != std::string::npos){
   sam.changeMode(EfficientSAM);
+}else if(modelName.find("edge_sam") != std::string::npos){
+  sam.changeMode(EdgeSAM);
 }
 std::string pathEncoder = modelName + "/" + modelName + "_preprocess.onnx";
 std::string pathDecoder = modelName + "/" + modelName + ".onnx";
