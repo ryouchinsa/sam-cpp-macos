@@ -10,21 +10,28 @@ Download a zipped model folder from below.
 - [EdgeSAM-3x](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/edge_sam_3x.zip)
 - [Tiny EfficientSAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/efficientsam_ti.zip)
 - [Small EfficientSAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/efficientsam_s.zip)
+- [ViT-Base HQ-SAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam_hq_vit_b.zip)
+- [ViT-Large HQ-SAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam_hq_vit_l.zip)
+- [ViT-Huge HQ-SAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam_hq_vit_h.zip)
 - [ViT-Base SAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam_vit_b_01ec64.zip)
 - [ViT-Large SAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam_vit_l_0b3195.zip)
 - [ViT-Huge SAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam_vit_h_4b8939.zip)
 
 Put the unzipped model folder into sam-cpp-macos folder.
 
-![スクリーンショット 2024-03-05 19 44 41](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/0cd464c4-c997-4ba4-a093-8ffc5f3de08e)
+![スクリーンショット 2024-03-12 5 06 38](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/cee0f920-7041-4110-9319-d825e7c3f952)
 
 Edit the modelName in [test.cpp](https://github.com/ryouchinsa/sam-cpp-macos/blob/master/test.cpp).
 
 ```cpp
 Sam sam;
 std::string modelName = "mobile_sam";
-if(modelName.find("efficientsam") != std::string::npos){
+if(modelName.find("sam_hq") != std::string::npos){
+  sam.changeMode(HQSAM);
+}else if(modelName.find("efficientsam") != std::string::npos){
   sam.changeMode(EfficientSAM);
+}else if(modelName.find("edge_sam") != std::string::npos){
+  sam.changeMode(EdgeSAM);
 }
 std::string pathEncoder = modelName + "/" + modelName + "_preprocess.onnx";
 std::string pathDecoder = modelName + "/" + modelName + ".onnx";
