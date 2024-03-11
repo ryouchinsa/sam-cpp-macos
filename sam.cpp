@@ -21,7 +21,9 @@ bool Sam::clearLoadModel(){
     delete sam;
     inputShapeEncoder.resize(0);
     outputShapeEncoder.resize(0);
+    intermShapePre.resize(0);
     outputTensorValuesEncoder.resize(0);
+    intermTensorValuesPre.resize(0);
   }catch(Ort::Exception& e){
     return false;
   }
@@ -95,6 +97,13 @@ bool Sam::loadModel(const std::string& encoderPath, const std::string& decoderPa
       loadingEnd();
       return false;
     }
+    if(mode == HQSAM){
+      intermShapePre = sessionDecoder->GetInputTypeInfo(1).GetTensorTypeAndShapeInfo().GetShape();
+      if (intermShapePre.size() != 5) {
+        loadingEnd();
+        return false;
+      }
+    }
   }catch(Ort::Exception& e){
     loadingEnd();
     return false;
@@ -163,7 +172,12 @@ bool Sam::preprocessImage(const cv::Mat& image){
     }
     auto inputTensor = getEncoderInputTensor(image);
     outputTensorValuesEncoder = std::vector<float>(outputShapeEncoder[0] * outputShapeEncoder[1] * outputShapeEncoder[2] * outputShapeEncoder[3]);
-    auto outputTensor = Ort::Value::CreateTensor<float>(memoryInfo, outputTensorValuesEncoder.data(), outputTensorValuesEncoder.size(), outputShapeEncoder.data(), outputShapeEncoder.size());
+    std::vector<Ort::Value> outputTensors;
+    outputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, outputTensorValuesEncoder.data(), outputTensorValuesEncoder.size(), outputShapeEncoder.data(), outputShapeEncoder.size()));
+    if(mode == HQSAM){
+      intermTensorValuesPre = std::vector<float>(intermShapePre[0] * intermShapePre[1] * intermShapePre[2] * intermShapePre[3] * intermShapePre[4]);
+      outputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, intermTensorValuesPre.data(), intermTensorValuesPre.size(), intermShapePre.data(), intermShapePre.size()));
+    }
     if(terminating){
       preprocessingEnd();
       return false;
@@ -171,7 +185,7 @@ bool Sam::preprocessImage(const cv::Mat& image){
     runOptionsEncoder.UnsetTerminate();
     std::vector<const char*> inputNames = getInputNamesEncoder();
     std::vector<const char*> outputNames = getOutputNamesEncoder();
-    sessionEncoder->Run(runOptionsEncoder, inputNames.data(), &inputTensor, 1, outputNames.data(), &outputTensor, 1);
+    sessionEncoder->Run(runOptionsEncoder, inputNames.data(), &inputTensor, 1, outputNames.data(), outputTensors.data(), outputTensors.size());
   }catch(Ort::Exception& e){
     preprocessingEnd();
     return false;
@@ -236,12 +250,15 @@ cv::Mat Sam::getMask(const std::list<cv::Point>& points, const std::list<cv::Poi
   std::vector<int64_t> inputLabelShape = getInputLabelShape(numPoints);
   std::vector<Ort::Value> inputTensors;
   inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, (float*)outputTensorValuesEncoder.data(), outputTensorValuesEncoder.size(), outputShapeEncoder.data(), outputShapeEncoder.size()));
+  if(mode == HQSAM){
+    inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, (float*)intermTensorValuesPre.data(), intermTensorValuesPre.size(), intermShapePre.data(), intermShapePre.size()));
+  }
   inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, inputPointValues.data(), 2 * numPoints, inputPointShape.data(), inputPointShape.size()));
   inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, inputLabelValues.data(), numPoints, inputLabelShape.data(), inputLabelShape.size()));
   const size_t maskInputSize = 256 * 256;
   std::vector<float> previousMaskInputValues;
   resizePreviousMasks(previousMaskIdx);
-  if(mode == SAM){
+  if(mode <= HQSAM){
     float maskInputValues[maskInputSize];
     memset(maskInputValues, 0, sizeof(maskInputValues));
     float hasMaskValues[] = {0};
@@ -259,7 +276,7 @@ cv::Mat Sam::getMask(const std::list<cv::Point>& points, const std::list<cv::Poi
     }
     inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, hasMaskValues, 1, hasMaskInputShape.data(), hasMaskInputShape.size()));
   }
-  if(mode == SAM){
+  if(mode <= HQSAM){
     std::vector<int64_t> origImSizeShape = {2};
     float orig_im_size_values[] = {(float)inputShapeEncoder[2], (float)inputShapeEncoder[3]};
     inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, orig_im_size_values, 2, origImSizeShape.data(), origImSizeShape.size()));
@@ -302,7 +319,7 @@ cv::Mat Sam::getMask(const std::list<cv::Point>& points, const std::list<cv::Poi
         }
       }
     }
-    if(mode == SAM){
+    if(mode <= HQSAM){
       previousMaskInputValues = std::vector<float>(maskInputSize);
       auto low_res_logits = outputTensors[2].GetTensorMutableData<float>();
       for (int i = 0; i < maskInputSize; i++) {
@@ -339,8 +356,12 @@ std::vector<const char*> Sam::getOutputNamesEncoder(){
     return {
       "image_embeddings"
     };
-  }
-  return {
+  }else if(mode == HQSAM){
+    return {
+      "output",
+      "interm_embeddings"
+    };
+  }return {
     "output"
   };
 }
@@ -358,6 +379,17 @@ std::vector<const char*> Sam::getInputNamesDecoder(){
       "image_embeddings",
       "point_coords",
       "point_labels"
+    };
+  }
+  else if(mode == HQSAM){
+    return {
+      "image_embeddings",
+      "interm_embeddings",
+      "point_coords",
+      "point_labels",
+      "mask_input",
+      "has_mask_input",
+      "orig_im_size"
     };
   }
   return {

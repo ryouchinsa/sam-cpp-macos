@@ -4,8 +4,10 @@
 
 int main(int argc, char** argv) {
   Sam sam;
-  std::string modelName = "edge_sam";
-  if(modelName.find("efficientsam") != std::string::npos){
+  std::string modelName = "mobile_sam";
+  if(modelName.find("sam_hq") != std::string::npos){
+    sam.changeMode(HQSAM);
+  }else if(modelName.find("efficientsam") != std::string::npos){
     sam.changeMode(EfficientSAM);
   }else if(modelName.find("edge_sam") != std::string::npos){
     sam.changeMode(EdgeSAM);

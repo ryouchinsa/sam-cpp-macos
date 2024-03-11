@@ -9,6 +9,7 @@
 
 enum SamMode {
   SAM,
+  HQSAM,
   EfficientSAM,
   EdgeSAM,
 };
@@ -19,8 +20,8 @@ class Sam {
   Ort::SessionOptions sessionOptions[2];
   Ort::RunOptions runOptionsEncoder;
   Ort::MemoryInfo memoryInfo{Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault)};
-  std::vector<int64_t> inputShapeEncoder, outputShapeEncoder;
-  std::vector<float> outputTensorValuesEncoder;
+  std::vector<int64_t> inputShapeEncoder, outputShapeEncoder, intermShapePre;
+  std::vector<float> outputTensorValuesEncoder, intermTensorValuesPre;
   std::vector<std::vector<float>> previousMasks;
   SamMode mode = SAM;
   bool loadingModel = false;
