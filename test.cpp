@@ -14,8 +14,9 @@ int main(int argc, char** argv) {
   }
   std::string pathEncoder = modelName + "/" + modelName + "_preprocess.onnx";
   std::string pathDecoder = modelName + "/" + modelName + ".onnx";
+  std::string device = "cpu"; // cpu, cuda:0, etc
   std::cout<<"loadModel started"<<std::endl;
-  bool successLoadModel = sam.loadModel(pathEncoder, pathDecoder, std::thread::hardware_concurrency());
+  bool successLoadModel = sam.loadModel(pathEncoder, pathDecoder, std::thread::hardware_concurrency(), device);
   if(!successLoadModel){
     std::cout<<"loadModel error"<<std::endl;
     return 1;
