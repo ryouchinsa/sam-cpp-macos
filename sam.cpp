@@ -258,10 +258,10 @@ cv::Mat Sam::getMask(const std::list<cv::Point>& points, const std::list<cv::Poi
   const size_t maskInputSize = 256 * 256;
   std::vector<float> previousMaskInputValues;
   resizePreviousMasks(previousMaskIdx);
+  float maskInputValues[maskInputSize];
+  memset(maskInputValues, 0, sizeof(maskInputValues));
+  float hasMaskValues[] = {0};
   if(mode <= HQSAM){
-    float maskInputValues[maskInputSize];
-    memset(maskInputValues, 0, sizeof(maskInputValues));
-    float hasMaskValues[] = {0};
     if(isNextGetMask){
     }else if(previousMaskIdx >= 0){
       hasMaskValues[0] = 1;
@@ -276,14 +276,14 @@ cv::Mat Sam::getMask(const std::list<cv::Point>& points, const std::list<cv::Poi
     }
     inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, hasMaskValues, 1, hasMaskInputShape.data(), hasMaskInputShape.size()));
   }
+  float orig_im_size_values_float[] = {(float)inputShapeEncoder[2], (float)inputShapeEncoder[3]};
+  int64_t orig_im_size_values_int64[] = {inputShapeEncoder[2], inputShapeEncoder[3]};
   if(mode <= HQSAM){
     std::vector<int64_t> origImSizeShape = {2};
-    float orig_im_size_values[] = {(float)inputShapeEncoder[2], (float)inputShapeEncoder[3]};
-    inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, orig_im_size_values, 2, origImSizeShape.data(), origImSizeShape.size()));
+    inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, orig_im_size_values_float, 2, origImSizeShape.data(), origImSizeShape.size()));
   }else if(mode == EfficientSAM){
     std::vector<int64_t> origImSizeShape = {2};
-    int64_t orig_im_size_values[] = {inputShapeEncoder[2], inputShapeEncoder[3]};
-    inputTensors.push_back(Ort::Value::CreateTensor<int64_t>(memoryInfo, orig_im_size_values, 2, origImSizeShape.data(), origImSizeShape.size()));
+    inputTensors.push_back(Ort::Value::CreateTensor<int64_t>(memoryInfo, orig_im_size_values_int64, 2, origImSizeShape.data(), origImSizeShape.size()));
   }
   cv::Mat outputMask = cv::Mat((int)inputShapeEncoder[2], (int)inputShapeEncoder[3], CV_8UC1);
   try{
