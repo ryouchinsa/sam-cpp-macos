@@ -57,7 +57,7 @@ bool modelExists(const std::string& modelPath){
   return true;
 }
 
-bool Sam::loadModel(const std::string& encoderPath, const std::string& decoderPath, int threadsNumber){
+bool Sam::loadModel(const std::string& encoderPath, const std::string& decoderPath, int threadsNumber, std::string device){
   try{
     loadingStart();
     if(!clearLoadModel()){
@@ -72,6 +72,15 @@ bool Sam::loadModel(const std::string& encoderPath, const std::string& decoderPa
       auto& option = sessionOptions[i];
       option.SetIntraOpNumThreads(threadsNumber);
       option.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL);
+      if(device == "cpu"){
+        continue;
+      }
+      if(device.substr(0, 5) == "cuda:"){
+        int gpuDeviceId = std::stoi(device.substr(5));
+        OrtCUDAProviderOptions options;
+        options.device_id = gpuDeviceId;
+        option.AppendExecutionProvider_CUDA(options);
+      }
     }
     sessionEncoder = std::make_unique<Ort::Session>(env, encoderPath.c_str(), sessionOptions[0]);
     std::vector<const char*> inputNamesEncoder = getInputNamesEncoder();
