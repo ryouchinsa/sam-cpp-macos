@@ -138,36 +138,6 @@ cv::Size Sam::getInputSize(){
   return cv::Size((int)inputShapeEncoder[3], (int)inputShapeEncoder[2]);
 }
 
-auto Sam::getEncoderInputTensor(const cv::Mat& image){
-  if(mode == EfficientSAM ||
-     mode == EdgeSAM){
-    std::vector<float> inputTensorValues(inputShapeEncoder[0] * inputShapeEncoder[1] * inputShapeEncoder[2] * inputShapeEncoder[3]);
-    for(int i = 0; i < inputShapeEncoder[2]; i++){
-      for(int j = 0; j < inputShapeEncoder[3]; j++){
-        int64_t pos = i * inputShapeEncoder[3] + j;
-        int64_t size = inputShapeEncoder[2] * inputShapeEncoder[3];
-        inputTensorValues[pos + size * 0] = image.at<cv::Vec3b>(i, j)[2] / 255.0;
-        inputTensorValues[pos + size * 1] = image.at<cv::Vec3b>(i, j)[1] / 255.0;
-        inputTensorValues[pos + size * 2] = image.at<cv::Vec3b>(i, j)[0] / 255.0;
-      }
-    }
-    auto inputTensor = Ort::Value::CreateTensor<float>(memoryInfo, inputTensorValues.data(), inputTensorValues.size(), inputShapeEncoder.data(), inputShapeEncoder.size());
-    return inputTensor;
-  }
-  std::vector<uint8_t> inputTensorValues(inputShapeEncoder[0] * inputShapeEncoder[1] * inputShapeEncoder[2] * inputShapeEncoder[3]);
-  for(int i = 0; i < inputShapeEncoder[2]; i++){
-    for(int j = 0; j < inputShapeEncoder[3]; j++){
-      int64_t pos = i * inputShapeEncoder[3] + j;
-      int64_t size = inputShapeEncoder[2] * inputShapeEncoder[3];
-      inputTensorValues[pos + size * 0] = image.at<cv::Vec3b>(i, j)[2];
-      inputTensorValues[pos + size * 1] = image.at<cv::Vec3b>(i, j)[1];
-      inputTensorValues[pos + size * 2] = image.at<cv::Vec3b>(i, j)[0];
-    }
-  }
-  auto inputTensor = Ort::Value::CreateTensor<uint8_t>(memoryInfo, inputTensorValues.data(), inputTensorValues.size(), inputShapeEncoder.data(), inputShapeEncoder.size());
-  return inputTensor;
-}
-
 bool Sam::preprocessImage(const cv::Mat& image){
   try{
     preprocessingStart();
@@ -179,7 +149,35 @@ bool Sam::preprocessImage(const cv::Mat& image){
       preprocessingEnd();
       return false;
     }
-    auto inputTensor = getEncoderInputTensor(image);
+    std::vector<float> inputTensorValuesFloat;
+    std::vector<uint8_t> inputTensorValuesInt;
+    bool isInputTensorFloat = (mode == EfficientSAM || mode == EdgeSAM);
+    if(isInputTensorFloat){
+      inputTensorValuesFloat.resize(inputShapeEncoder[0] * inputShapeEncoder[1] * inputShapeEncoder[2] * inputShapeEncoder[3]);
+      for(int i = 0; i < inputShapeEncoder[2]; i++){
+        for(int j = 0; j < inputShapeEncoder[3]; j++){
+          int64_t pos = i * inputShapeEncoder[3] + j;
+          int64_t size = inputShapeEncoder[2] * inputShapeEncoder[3];
+          inputTensorValuesFloat[pos + size * 0] = image.at<cv::Vec3b>(i, j)[2] / 255.0;
+          inputTensorValuesFloat[pos + size * 1] = image.at<cv::Vec3b>(i, j)[1] / 255.0;
+          inputTensorValuesFloat[pos + size * 2] = image.at<cv::Vec3b>(i, j)[0] / 255.0;
+        }
+      }
+    }else{
+      inputTensorValuesInt.resize(inputShapeEncoder[0] * inputShapeEncoder[1] * inputShapeEncoder[2] * inputShapeEncoder[3]);
+      for(int i = 0; i < inputShapeEncoder[2]; i++){
+        for(int j = 0; j < inputShapeEncoder[3]; j++){
+          int64_t pos = i * inputShapeEncoder[3] + j;
+          int64_t size = inputShapeEncoder[2] * inputShapeEncoder[3];
+          inputTensorValuesInt[pos + size * 0] = image.at<cv::Vec3b>(i, j)[2];
+          inputTensorValuesInt[pos + size * 1] = image.at<cv::Vec3b>(i, j)[1];
+          inputTensorValuesInt[pos + size * 2] = image.at<cv::Vec3b>(i, j)[0];
+        }
+      }
+    }
+    auto inputTensor = isInputTensorFloat ?
+    Ort::Value::CreateTensor<float>(memoryInfo, inputTensorValuesFloat.data(), inputTensorValuesFloat.size(), inputShapeEncoder.data(), inputShapeEncoder.size()) :
+    Ort::Value::CreateTensor<uint8_t>(memoryInfo, inputTensorValuesInt.data(), inputTensorValuesInt.size(), inputShapeEncoder.data(), inputShapeEncoder.size());;
     outputTensorValuesEncoder = std::vector<float>(outputShapeEncoder[0] * outputShapeEncoder[1] * outputShapeEncoder[2] * outputShapeEncoder[3]);
     std::vector<Ort::Value> outputTensors;
     outputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, outputTensorValuesEncoder.data(), outputTensorValuesEncoder.size(), outputShapeEncoder.data(), outputShapeEncoder.size()));

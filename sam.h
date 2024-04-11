@@ -40,7 +40,6 @@ class Sam {
   void loadingStart();
   void loadingEnd();
   cv::Size getInputSize();
-  auto getEncoderInputTensor(const cv::Mat& image);
   bool preprocessImage(const cv::Mat& image);
   void preprocessingStart();
   void preprocessingEnd();
