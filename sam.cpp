@@ -177,7 +177,7 @@ bool Sam::preprocessImage(const cv::Mat& image){
     }
     auto inputTensor = isInputTensorFloat ?
     Ort::Value::CreateTensor<float>(memoryInfo, inputTensorValuesFloat.data(), inputTensorValuesFloat.size(), inputShapeEncoder.data(), inputShapeEncoder.size()) :
-    Ort::Value::CreateTensor<uint8_t>(memoryInfo, inputTensorValuesInt.data(), inputTensorValuesInt.size(), inputShapeEncoder.data(), inputShapeEncoder.size());;
+    Ort::Value::CreateTensor<uint8_t>(memoryInfo, inputTensorValuesInt.data(), inputTensorValuesInt.size(), inputShapeEncoder.data(), inputShapeEncoder.size());
     outputTensorValuesEncoder = std::vector<float>(outputShapeEncoder[0] * outputShapeEncoder[1] * outputShapeEncoder[2] * outputShapeEncoder[3]);
     std::vector<Ort::Value> outputTensors;
     outputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, outputTensorValuesEncoder.data(), outputTensorValuesEncoder.size(), outputShapeEncoder.data(), outputShapeEncoder.size()));
