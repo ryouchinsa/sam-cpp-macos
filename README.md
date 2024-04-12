@@ -4,7 +4,7 @@ This code is originated from [Segment Anything CPP Wrapper](https://github.com/d
 
 ![sam](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/8d41873d-c61c-43c6-a433-51fb5cd594c1)
 
-Download a zipped model folder and put the unzipped model folder into sam-cpp-macos folder.
+Download a zipped model folder.
 - [MobileSAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/mobile_sam.zip)
 - [EdgeSAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/edge_sam.zip)
 - [EdgeSAM-3x](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/edge_sam_3x.zip)
