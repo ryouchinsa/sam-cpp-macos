@@ -1,29 +1,39 @@
 #include <opencv2/opencv.hpp>
+#define STRIP_FLAG_HELP 1
+#include <gflags/gflags.h>
 #include <thread>
 #include "sam.h"
 
+DEFINE_string(encoder, "mobile_sam/mobile_sam_preprocess.onnx", "Path to the encoder model");
+DEFINE_string(decoder, "mobile_sam/mobile_sam.onnx", "Path to the decoder model");
+DEFINE_string(image, "david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg", "Path to the image");
+DEFINE_string(device, "cpu", "cpu or cuda:0(1,2,3...)");
+DEFINE_bool(h, false, "Show help");
+
 int main(int argc, char** argv) {
+  gflags::ParseCommandLineNonHelpFlags(&argc, &argv, true);
+  if(FLAGS_h){
+    std::cout<<"Example: ./build/sam_cpp_test -encoder=\"mobile_sam/mobile_sam_preprocess.onnx\" "
+               "-decoder=\"mobile_sam/mobile_sam.onnx\" "
+               "-image=\"david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg\" -device=\"cpu\""<< std::endl;
+    return 0;
+  }
   Sam sam;
-  std::string modelName = "mobile_sam";
-  if(modelName.find("sam_hq") != std::string::npos){
+  if(FLAGS_encoder.find("sam_hq") != std::string::npos){
     sam.changeMode(HQSAM);
-  }else if(modelName.find("efficientsam") != std::string::npos){
+  }else if(FLAGS_encoder.find("efficientsam") != std::string::npos){
     sam.changeMode(EfficientSAM);
-  }else if(modelName.find("edge_sam") != std::string::npos){
+  }else if(FLAGS_encoder.find("edge_sam") != std::string::npos){
     sam.changeMode(EdgeSAM);
   }
-  std::string pathEncoder = modelName + "/" + modelName + "_preprocess.onnx";
-  std::string pathDecoder = modelName + "/" + modelName + ".onnx";
-  std::string device = "cpu"; // cpu, cuda:0, etc
   std::cout<<"loadModel started"<<std::endl;
-  bool successLoadModel = sam.loadModel(pathEncoder, pathDecoder, std::thread::hardware_concurrency(), device);
+  bool successLoadModel = sam.loadModel(FLAGS_encoder, FLAGS_decoder, std::thread::hardware_concurrency(), FLAGS_device);
   if(!successLoadModel){
     std::cout<<"loadModel error"<<std::endl;
     return 1;
   }
   std::cout<<"preprocessImage started"<<std::endl;
-  std::string imagePath = "david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg";
-  cv::Mat image = cv::imread(imagePath, cv::IMREAD_COLOR);
+  cv::Mat image = cv::imread(FLAGS_image, cv::IMREAD_COLOR);
   cv::Size imageSize = cv::Size(image.cols, image.rows);
   cv::Size inputSize = sam.getInputSize();
   cv::resize(image, image, inputSize);
