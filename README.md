@@ -110,9 +110,9 @@ target_link_libraries(
 Build and run.
 
 ```bash
-cmake -S . -B build
+cmake -S . -B build -DONNXRUNTIME_ROOT_DIR=/Users/ryo/Downloads/onnxruntime-osx-universal2-1.17.1
 cmake --build build
-./build/sam_cpp_test
+./build/sam_cpp_test -encoder="mobile_sam/mobile_sam_preprocess.onnx" -decoder="mobile_sam/mobile_sam.onnx" -image="david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg" -device="cpu"
 ```
 
 To build on the Xcode, this is our settings on the Xcode.
