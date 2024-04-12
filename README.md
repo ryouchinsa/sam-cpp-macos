@@ -32,6 +32,31 @@ git clone https://github.com/microsoft/vcpkg.git
 ./vcpkg/vcpkg install opencv
 ```
 
+For Ubuntu GPU, install cuda and cudnn.
+```bash
+wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
+sudo dpkg -i cuda-keyring_1.1-1_all.deb
+sudo apt update
+sudo apt install cuda-drivers
+reboot
+nvidia-smi
+
+sudo apt install cuda-toolkit-11-8
+vi ~/.bashrc
+export PATH="/usr/local/cuda/bin${PATH:+:${PATH}}"
+export LD_LIBRARY_PATH="/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+source ~/.bashrc
+which nvcc
+nvcc --version
+
+apt list libcudnn8 -a
+cudnn_version=8.9.7.29
+cuda_version=cuda11.8
+sudo apt install libcudnn8=${cudnn_version}-1+${cuda_version}
+sudo apt install libcudnn8-dev=${cudnn_version}-1+${cuda_version}
+sudo apt install libcudnn8-samples=${cudnn_version}-1+${cuda_version}
+```
+
 Build and run.
 
 ```bash
