@@ -1,23 +1,16 @@
 ## Segment Anything Model 2 CPP Wrapper for macOS and Ubuntu
 
-This code is originated from [Segment Anything CPP Wrapper](https://github.com/dinglufe/segment-anything-cpp-wrapper) and implemented on the macOS app [RectLabel](https://rectlabel.com). We customized the original code so that getMask() uses the previous mask result and retain the previous mask array for undo/redo actions. 
+This code is to run a [Segment Anything Model 2](https://github.com/facebookresearch/sam2) ONNX model in c++ code and implemented on the macOS app [RectLabel](https://rectlabel.com).
 
 <video src="https://github.com/user-attachments/assets/9f2819a2-3fc4-4756-85e6-5a7834add687" controls="controls" muted="muted" class="width-fit" style="max-height:640px; min-height: 200px"></video>
 
-![スクリーンショット 2024-03-12 5 06 38](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/cee0f920-7041-4110-9319-d825e7c3f952)
-
 Download a SAM model folder.
-- [MobileSAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/mobile_sam.zip)
-- [EdgeSAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/edge_sam.zip)
-- [EdgeSAM-3x](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/edge_sam_3x.zip)
-- [Tiny EfficientSAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/efficientsam_ti.zip)
-- [Small EfficientSAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/efficientsam_s.zip)
-- [ViT-Base HQ-SAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam_hq_vit_b.zip)
-- [ViT-Large HQ-SAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam_hq_vit_l.zip)
-- [ViT-Huge HQ-SAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam_hq_vit_h.zip)
-- [ViT-Base SAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam_vit_b_01ec64.zip)
-- [ViT-Large SAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam_vit_l_0b3195.zip)
-- [ViT-Huge SAM](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam_vit_h_4b8939.zip)
+- [SAM2 Tiny](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2_tiny.zip)
+- [SAM2 Small](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2_small.zip)
+- [SAM2 BasePlus](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2_base_plus.zip)
+- [SAM2 Large](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2_large.zip)
+
+![スクリーンショット 2024-03-12 5 06 38](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/cee0f920-7041-4110-9319-d825e7c3f952)
 
 Download an ONNX Runtime folder.
 - [onnxruntime-osx-universal2-1.17.1.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-osx-universal2-1.17.1.tgz) for macOS
