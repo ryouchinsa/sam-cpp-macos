@@ -1,4 +1,4 @@
-## Segment Anything CPP Wrapper for macOS and Ubuntu CPU/GPU
+## Segment Anything Model 2 CPP Wrapper for macOS and Ubuntu
 
 This code is originated from [Segment Anything CPP Wrapper](https://github.com/dinglufe/segment-anything-cpp-wrapper) and implemented on the macOS app [RectLabel](https://rectlabel.com). We customized the original code so that getMask() uses the previous mask result and retain the previous mask array for undo/redo actions. 
 
