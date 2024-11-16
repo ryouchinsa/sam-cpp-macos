@@ -4,18 +4,18 @@ This code is to run a [Segment Anything Model 2](https://github.com/facebookrese
 
 <video src="https://github.com/user-attachments/assets/9f2819a2-3fc4-4756-85e6-5a7834add687" controls="controls" muted="muted" class="width-fit" style="max-height:640px; min-height: 200px"></video>
 
-Download a SAM model folder.
+Download a SAM2 model folder.
 - [SAM2 Tiny](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2_tiny.zip)
 - [SAM2 Small](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2_small.zip)
 - [SAM2 BasePlus](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2_base_plus.zip)
 - [SAM2 Large](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2_large.zip)
 
-![スクリーンショット 2024-03-12 5 06 38](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/cee0f920-7041-4110-9319-d825e7c3f952)
-
 Download an ONNX Runtime folder.
 - [onnxruntime-osx-universal2-1.17.1.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-osx-universal2-1.17.1.tgz) for macOS
 - [onnxruntime-linux-x64-1.17.1.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-linux-x64-1.17.1.tgz) for Ubuntu CPU
 - [onnxruntime-linux-x64-gpu-1.17.1.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-linux-x64-gpu-1.17.1.tgz) for Ubuntu GPU
+
+![スクリーンショット 2024-03-12 5 06 38](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/cee0f920-7041-4110-9319-d825e7c3f952)
 
 For Ubuntu, install gflags and opencv through [vcpkg](https://github.com/microsoft/vcpkg).
 ```bash
