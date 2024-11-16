@@ -15,7 +15,7 @@ Download an ONNX Runtime folder.
 - [onnxruntime-linux-x64-1.17.1.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-linux-x64-1.17.1.tgz) for Ubuntu CPU
 - [onnxruntime-linux-x64-gpu-1.17.1.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-linux-x64-gpu-1.17.1.tgz) for Ubuntu GPU
 
-![スクリーンショット 2024-03-12 5 06 38](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/cee0f920-7041-4110-9319-d825e7c3f952)
+![sam_cpp_macos_folders](https://github.com/user-attachments/assets/81055a3b-0ea4-4007-96fa-0732dcf41bcc)
 
 For Ubuntu, install gflags and opencv through [vcpkg](https://github.com/microsoft/vcpkg).
 ```bash
