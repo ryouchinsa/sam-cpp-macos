@@ -2,7 +2,7 @@
 
 This code is originated from [Segment Anything CPP Wrapper](https://github.com/dinglufe/segment-anything-cpp-wrapper) and implemented on the macOS app [RectLabel](https://rectlabel.com). We customized the original code so that getMask() uses the previous mask result and retain the previous mask array for undo/redo actions. 
 
-![sam](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/8d41873d-c61c-43c6-a433-51fb5cd594c1)
+<video src="https://github.com/user-attachments/assets/9f2819a2-3fc4-4756-85e6-5a7834add687" controls="controls" muted="muted" class="width-fit" style="max-height:640px; min-height: 200px"></video>
 
 ![スクリーンショット 2024-03-12 5 06 38](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/cee0f920-7041-4110-9319-d825e7c3f952)
 
