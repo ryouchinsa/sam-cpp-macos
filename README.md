@@ -35,9 +35,11 @@ You can download exported ONNX models.
 - [SAM2 Large](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2_large.zip)
 
 Download an ONNX Runtime folder.
-- [onnxruntime-osx-universal2-1.17.1.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-osx-universal2-1.17.1.tgz) for macOS
-- [onnxruntime-linux-x64-1.17.1.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-linux-x64-1.17.1.tgz) for Ubuntu CPU
-- [onnxruntime-linux-x64-gpu-1.17.1.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-linux-x64-gpu-1.17.1.tgz) for Ubuntu GPU
+- [onnxruntime-osx-universal2-1.20.0.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.20.0/onnxruntime-osx-universal2-1.20.0.tgz) for macOS
+- [onnxruntime-linux-x64-1.20.0.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.20.0/onnxruntime-linux-x64-1.20.0.tgz) for Ubuntu CPU
+- [onnxruntime-linux-x64-gpu-1.20.0.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.20.0/onnxruntime-linux-x64-gpu-1.20.0.tgz) for Ubuntu GPU
+
+Put those ONNX models and runtime folder in sam-cpp-macos folder.
 
 ![sam_cpp_macos_folders](https://github.com/user-attachments/assets/81055a3b-0ea4-4007-96fa-0732dcf41bcc)
 
@@ -87,9 +89,9 @@ cmake -S . -B build -DONNXRUNTIME_ROOT_DIR=/root/onnxruntime-linux-x64-gpu-1.17.
 cmake --build build
 
 # macOS and Ubuntu CPU
-./build/sam_cpp_test -encoder="mobile_sam/mobile_sam_preprocess.onnx" -decoder="mobile_sam/mobile_sam.onnx" -image="david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg" -device="cpu"
+./build/sam_cpp_test -encoder="sam2_tiny/sam2_tiny_preprocess.onnx" -decoder="sam2_tiny/sam2_tiny.onnx" -image="david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg" -device="cpu"
 # Ubuntu GPU
-./build/sam_cpp_test -encoder="mobile_sam/mobile_sam_preprocess.onnx" -decoder="mobile_sam/mobile_sam.onnx" -image="david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg" -device="cuda:0"
+./build/sam_cpp_test -encoder="sam2_tiny/sam2_tiny_preprocess.onnx" -decoder="sam2_tiny/sam2_tiny.onnx" -image="david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg" -device="cuda:0"
 ```
 
 To build on the Xcode, this is our settings on the Xcode.
