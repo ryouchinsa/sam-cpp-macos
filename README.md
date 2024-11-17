@@ -4,17 +4,31 @@ This code is to run a [Segment Anything Model 2](https://github.com/facebookrese
 
 <video src="https://github.com/user-attachments/assets/812776c3-bfad-4f80-99e1-6141b21c024b" controls="controls" muted="muted" class="width-fit" style="max-height:640px; min-height: 200px"></video>
 
+Install [Segment Anything Model 2](https://github.com/facebookresearch/sam2) and download checkpoints.
 
+![checkpoints](https://github.com/user-attachments/assets/0a905f19-6cb8-4231-a355-df6b1e8f1ab0)
 
+Copy yaml files in sam2/configs/sam2.1 to sam2.
 
+![configs](https://github.com/user-attachments/assets/39827d2f-76ba-4904-bc59-9e0716af6cda)
 
+Put [export_onnx.py](https://github.com/ryouchinsa/sam-cpp-macos/blob/master/export_onnx.py) and david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg to the root folder.
 
+![export](https://github.com/user-attachments/assets/0fc7dcce-8f38-403b-b84e-bb38fea0eeca)
 
+To export an ONNX model.
 
+```bash
+python export_onnx.py --mode export
+```
 
+To check how the ONNX model works.
 
+```bash
+python export_onnx.py --mode import
+```
 
-Download a SAM2 model folder.
+You can download exported ONNX models.
 - [SAM2 Tiny](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2_tiny.zip)
 - [SAM2 Small](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2_small.zip)
 - [SAM2 BasePlus](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2_base_plus.zip)
