@@ -39,9 +39,7 @@ Download an ONNX Runtime folder.
 - [onnxruntime-linux-x64-1.20.0.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.20.0/onnxruntime-linux-x64-1.20.0.tgz) for Ubuntu CPU
 - [onnxruntime-linux-x64-gpu-1.20.0.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.20.0/onnxruntime-linux-x64-gpu-1.20.0.tgz) for Ubuntu GPU
 
-Put those ONNX models and runtime folder in sam-cpp-macos folder.
-
-![sam_cpp_macos_folders](https://github.com/user-attachments/assets/81055a3b-0ea4-4007-96fa-0732dcf41bcc)
+![folder](https://github.com/user-attachments/assets/ee7c328f-17e1-4881-a2db-1942f3eee5a4)
 
 For Ubuntu, install gflags and opencv through [vcpkg](https://github.com/microsoft/vcpkg).
 ```bash
@@ -80,11 +78,11 @@ Build and run.
 
 ```bash
 # macOS
-cmake -S . -B build -DONNXRUNTIME_ROOT_DIR=/Users/ryo/Downloads/onnxruntime-osx-universal2-1.17.1
+cmake -S . -B build -DONNXRUNTIME_ROOT_DIR=/Users/ryo/Downloads/onnxruntime-osx-universal2-1.20.0
 # Ubuntu CPU
-cmake -S . -B build -DONNXRUNTIME_ROOT_DIR=/root/onnxruntime-linux-x64-1.17.1 -DCMAKE_TOOLCHAIN_FILE=/root/vcpkg/scripts/buildsystems/vcpkg.cmake
+cmake -S . -B build -DONNXRUNTIME_ROOT_DIR=/root/onnxruntime-linux-x64-1.20.0.tgz -DCMAKE_TOOLCHAIN_FILE=/root/vcpkg/scripts/buildsystems/vcpkg.cmake
 # Ubuntu GPU
-cmake -S . -B build -DONNXRUNTIME_ROOT_DIR=/root/onnxruntime-linux-x64-gpu-1.17.1 -DCMAKE_TOOLCHAIN_FILE=/root/vcpkg/scripts/buildsystems/vcpkg.cmake
+cmake -S . -B build -DONNXRUNTIME_ROOT_DIR=/root/onnxruntime-linux-x64-gpu-1.20.0.tgz -DCMAKE_TOOLCHAIN_FILE=/root/vcpkg/scripts/buildsystems/vcpkg.cmake
 
 cmake --build build
 
@@ -93,25 +91,3 @@ cmake --build build
 # Ubuntu GPU
 ./build/sam_cpp_test -encoder="sam2_tiny/sam2_tiny_preprocess.onnx" -decoder="sam2_tiny/sam2_tiny.onnx" -image="david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg" -device="cuda:0"
 ```
-
-To build on the Xcode, this is our settings on the Xcode.
-
-- General -> Frameworks, Libraries, and Embedded Content
-
-![スクリーンショット 2024-03-06 1 36 12](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/f13b4006-ad18-4a32-92cd-179804682887)
-
-- Build Settings
-
-Header Search Paths
-`/Users/ryo/Downloads/onnxruntime-osx-universal2-1.17.1/include`
-
-Library Search Paths
-`/Users/ryo/Downloads/onnxruntime-osx-universal2-1.17.1/lib`
-
-- Build Phases -> Embed Libraries
-
-![スクリーンショット 2024-03-06 1 37 32](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/13ccda41-5d13-4e73-8b53-830ca0efa0b4)
-
-
-
-
