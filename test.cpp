@@ -41,6 +41,8 @@ int main(int argc, char** argv) {
     std::cout<<"preprocessImage error"<<std::endl;
     return 1;
   }
+  std::cout<<"getMask started"<<std::endl;
+  begin = std::chrono::steady_clock::now();
   cv::Point point1, point2;
   cv::Rect rect;
   cv::Mat mask;
@@ -97,5 +99,8 @@ int main(int argc, char** argv) {
   previousMaskIdx++;
   cv::resize(mask, mask, imageSize, 0, 0, cv::INTER_NEAREST);
   cv::imwrite("mask_point1_then_point2.png", mask);
+  
+  end = std::chrono::steady_clock::now();
+  std::cout << "sec = " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()) / 1000000.0 <<std::endl;
   return 0;
 }
