@@ -4,28 +4,42 @@ This code is to run a [Segment Anything Model 2](https://github.com/facebookrese
 
 <video src="https://github.com/user-attachments/assets/812776c3-bfad-4f80-99e1-6141b21c024b" controls="controls" muted="muted" class="width-fit" style="max-height:640px; min-height: 200px"></video>
 
+Install [Segment Anything Model 2](https://github.com/facebookresearch/sam2) and download checkpoints.
 
+![checkpoints](https://github.com/user-attachments/assets/0a905f19-6cb8-4231-a355-df6b1e8f1ab0)
 
+Copy yaml files in sam2/configs/sam2.1 to sam2.
 
+![configs](https://github.com/user-attachments/assets/39827d2f-76ba-4904-bc59-9e0716af6cda)
 
+Put [export_onnx.py](https://github.com/ryouchinsa/sam-cpp-macos/blob/master/export_onnx.py) and david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg to the root folder.
 
+![export](https://github.com/user-attachments/assets/0fc7dcce-8f38-403b-b84e-bb38fea0eeca)
 
+To export an ONNX model.
 
+```bash
+python export_onnx.py --mode export
+```
 
+To check how the ONNX model works.
 
+```bash
+python export_onnx.py --mode import
+```
 
-Download a SAM2 model folder.
+You can download exported ONNX models.
 - [SAM2 Tiny](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2_tiny.zip)
 - [SAM2 Small](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2_small.zip)
 - [SAM2 BasePlus](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2_base_plus.zip)
 - [SAM2 Large](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2_large.zip)
 
 Download an ONNX Runtime folder.
-- [onnxruntime-osx-universal2-1.17.1.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-osx-universal2-1.17.1.tgz) for macOS
-- [onnxruntime-linux-x64-1.17.1.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-linux-x64-1.17.1.tgz) for Ubuntu CPU
-- [onnxruntime-linux-x64-gpu-1.17.1.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-linux-x64-gpu-1.17.1.tgz) for Ubuntu GPU
+- [onnxruntime-osx-universal2-1.20.0.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.20.0/onnxruntime-osx-universal2-1.20.0.tgz) for macOS
+- [onnxruntime-linux-x64-1.20.0.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.20.0/onnxruntime-linux-x64-1.20.0.tgz) for Ubuntu CPU
+- [onnxruntime-linux-x64-gpu-1.20.0.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.20.0/onnxruntime-linux-x64-gpu-1.20.0.tgz) for Ubuntu GPU
 
-![sam_cpp_macos_folders](https://github.com/user-attachments/assets/81055a3b-0ea4-4007-96fa-0732dcf41bcc)
+![folder](https://github.com/user-attachments/assets/ee7c328f-17e1-4881-a2db-1942f3eee5a4)
 
 For Ubuntu, install gflags and opencv through [vcpkg](https://github.com/microsoft/vcpkg).
 ```bash
@@ -64,38 +78,16 @@ Build and run.
 
 ```bash
 # macOS
-cmake -S . -B build -DONNXRUNTIME_ROOT_DIR=/Users/ryo/Downloads/onnxruntime-osx-universal2-1.17.1
+cmake -S . -B build -DONNXRUNTIME_ROOT_DIR=/Users/ryo/Downloads/onnxruntime-osx-universal2-1.20.0
 # Ubuntu CPU
-cmake -S . -B build -DONNXRUNTIME_ROOT_DIR=/root/onnxruntime-linux-x64-1.17.1 -DCMAKE_TOOLCHAIN_FILE=/root/vcpkg/scripts/buildsystems/vcpkg.cmake
+cmake -S . -B build -DONNXRUNTIME_ROOT_DIR=/root/onnxruntime-linux-x64-1.20.0 -DCMAKE_TOOLCHAIN_FILE=/root/vcpkg/scripts/buildsystems/vcpkg.cmake
 # Ubuntu GPU
-cmake -S . -B build -DONNXRUNTIME_ROOT_DIR=/root/onnxruntime-linux-x64-gpu-1.17.1 -DCMAKE_TOOLCHAIN_FILE=/root/vcpkg/scripts/buildsystems/vcpkg.cmake
+cmake -S . -B build -DONNXRUNTIME_ROOT_DIR=/root/onnxruntime-linux-x64-gpu-1.20.0 -DCMAKE_TOOLCHAIN_FILE=/root/vcpkg/scripts/buildsystems/vcpkg.cmake
 
 cmake --build build
 
 # macOS and Ubuntu CPU
-./build/sam_cpp_test -encoder="mobile_sam/mobile_sam_preprocess.onnx" -decoder="mobile_sam/mobile_sam.onnx" -image="david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg" -device="cpu"
+./build/sam_cpp_test -encoder="sam2_tiny/sam2_tiny_preprocess.onnx" -decoder="sam2_tiny/sam2_tiny.onnx" -image="david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg" -device="cpu"
 # Ubuntu GPU
-./build/sam_cpp_test -encoder="mobile_sam/mobile_sam_preprocess.onnx" -decoder="mobile_sam/mobile_sam.onnx" -image="david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg" -device="cuda:0"
+./build/sam_cpp_test -encoder="sam2_tiny/sam2_tiny_preprocess.onnx" -decoder="sam2_tiny/sam2_tiny.onnx" -image="david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg" -device="cuda:0"
 ```
-
-To build on the Xcode, this is our settings on the Xcode.
-
-- General -> Frameworks, Libraries, and Embedded Content
-
-![スクリーンショット 2024-03-06 1 36 12](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/f13b4006-ad18-4a32-92cd-179804682887)
-
-- Build Settings
-
-Header Search Paths
-`/Users/ryo/Downloads/onnxruntime-osx-universal2-1.17.1/include`
-
-Library Search Paths
-`/Users/ryo/Downloads/onnxruntime-osx-universal2-1.17.1/lib`
-
-- Build Phases -> Embed Libraries
-
-![スクリーンショット 2024-03-06 1 37 32](https://github.com/ryouchinsa/sam-cpp-macos/assets/1954306/13ccda41-5d13-4e73-8b53-830ca0efa0b4)
-
-
-
-
