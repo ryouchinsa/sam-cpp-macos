@@ -267,13 +267,37 @@ def import_onnx(args):
     )
     has_mask_input = np.array([0], dtype=np.float32)
 
+    points0 = []
+    labels0 = []
+    points0.append([1215, 125])
+    points0.append([1723, 561])
+    labels0.append(2)
+    labels0.append(3)
+    points1 = []
+    labels1 = []
+    points1.append([890, 85])
+    points1.append([1205, 545])
+    labels1.append(2)
+    labels1.append(3)
+    points_batch = [points0, points1]
+    labels_batch = [labels0, labels1]
+    decode_batch("mask_box_batch.png", mask_input, has_mask_input, input_size, image_size, sessionDecoder, input_names_decoder, output_names_decoder, points_batch, labels_batch, image_embeddings, high_res_features1, high_res_features2)
+
     points = []
     labels = []
     points.append([1215, 125])
     points.append([1723, 561])
     labels.append(2)
     labels.append(3)
-    decode_image("mask_box.png", mask_input, has_mask_input, input_size, image_size, sessionDecoder, input_names_decoder, output_names_decoder, points, labels, image_embeddings, high_res_features1, high_res_features2)
+    decode("mask_box1.png", mask_input, has_mask_input, input_size, image_size, sessionDecoder, input_names_decoder, output_names_decoder, points, labels, image_embeddings, high_res_features1, high_res_features2)
+
+    points = []
+    labels = []
+    points.append([890, 85])
+    points.append([1205, 545])
+    labels.append(2)
+    labels.append(3)
+    decode("mask_box2.png", mask_input, has_mask_input, input_size, image_size, sessionDecoder, input_names_decoder, output_names_decoder, points, labels, image_embeddings, high_res_features1, high_res_features2)
 
     points = []
     labels = []
@@ -281,32 +305,38 @@ def import_onnx(args):
     labels.append(1)
     points.append([1500, 420])
     labels.append(1)
-    decode_image("mask_point12.png", mask_input, has_mask_input, input_size, image_size, sessionDecoder, input_names_decoder, output_names_decoder, points, labels, image_embeddings, high_res_features1, high_res_features2)
+    decode("mask_point12.png", mask_input, has_mask_input, input_size, image_size, sessionDecoder, input_names_decoder, output_names_decoder, points, labels, image_embeddings, high_res_features1, high_res_features2)
     
     points = []
     labels = []
     points.append([1500, 420])
     labels.append(1)
-    decode_image("mask_point2.png", mask_input, has_mask_input, input_size, image_size, sessionDecoder, input_names_decoder, output_names_decoder, points, labels, image_embeddings, high_res_features1, high_res_features2)
+    decode("mask_point2.png", mask_input, has_mask_input, input_size, image_size, sessionDecoder, input_names_decoder, output_names_decoder, points, labels, image_embeddings, high_res_features1, high_res_features2)
     
     points = []
     labels = []
     points.append([1255, 360])
     labels.append(1)
-    low_res_mask = decode_image("mask_point1.png", mask_input, has_mask_input, input_size, image_size, sessionDecoder, input_names_decoder, output_names_decoder, points, labels, image_embeddings, high_res_features1, high_res_features2)
+    low_res_mask = decode("mask_point1.png", mask_input, has_mask_input, input_size, image_size, sessionDecoder, input_names_decoder, output_names_decoder, points, labels, image_embeddings, high_res_features1, high_res_features2)
     
     points.append([1500, 420])
     labels.append(1)
     num_labels = len(labels)
     has_mask_input = np.array([1], dtype=np.float32)
-    decode_image("mask_point1_then_point2.png", low_res_mask, has_mask_input, input_size, image_size, sessionDecoder, input_names_decoder, output_names_decoder, points, labels, image_embeddings, high_res_features1, high_res_features2)
+    decode("mask_point1_then_point2.png", low_res_mask, has_mask_input, input_size, image_size, sessionDecoder, input_names_decoder, output_names_decoder, points, labels, image_embeddings, high_res_features1, high_res_features2)
 
-def decode_image(mask_path, mask_input, has_mask_input, input_size, image_size, sessionDecoder, input_names_decoder, output_names_decoder, points, labels, image_embeddings, high_res_features1, high_res_features2):
-    points, labels = np.array(points), np.array(labels)
-    input_point_coords, input_point_labels = prepare_points(
-        points, labels, image_size, input_size
-    )
-    orig_im_size = np.array(input_size, dtype=np.int64)
+def decode_batch(mask_path, mask_input, has_mask_input, input_size, image_size, sessionDecoder, input_names_decoder, output_names_decoder, points_batch, labels_batch, image_embeddings, high_res_features1, high_res_features2):
+    batch_num = len(points_batch)
+    for i in range(batch_num):
+        points, labels = np.array(points_batch[i]), np.array(labels_batch[i])
+        points, labels = prepare_points(points, labels, image_size, input_size)
+        if i == 0:
+            input_point_coords = points
+            input_point_labels = labels
+        else:
+            input_point_coords = np.append(input_point_coords, points, axis=0)
+            input_point_labels = np.append(input_point_labels, labels, axis=0)
+    orig_im_size = np.array(image_size, dtype=np.int64)
     inputs = [
         image_embeddings, 
         high_res_features1, 
@@ -327,17 +357,51 @@ def decode_image(mask_path, mask_input, has_mask_input, input_size, image_size, 
         },
     )
     print(f"infer time: {(time.perf_counter() - start) * 1000:.2f} ms")
-    scores = outputs[1].squeeze()
-    masks = outputs[0][0]
-    masks = masks[np.argmax(scores)]
-    low_res_mask = outputs[2][0]
-    low_res_mask = low_res_mask[np.argmax(scores)]
-    low_res_mask = np.array([[low_res_mask]])
-    masks = cv2.resize(
-        masks, (image_size[1], image_size[0]), interpolation=cv2.INTER_NEAREST
+    masks = outputs[0]
+    scores = outputs[1]
+    batch_num = masks.shape[0]
+    mask = np.zeros((masks.shape[2], masks.shape[3]), dtype=np.uint8)
+    for i in range(batch_num):
+        max_idx = np.argmax(scores[i])
+        m = masks[i][max_idx]
+        mask[m > 0.0] = 255
+    cv2.imwrite(mask_path, mask)
+
+def decode(mask_path, mask_input, has_mask_input, input_size, image_size, sessionDecoder, input_names_decoder, output_names_decoder, points, labels, image_embeddings, high_res_features1, high_res_features2):
+    points, labels = np.array(points), np.array(labels)
+    input_point_coords, input_point_labels = prepare_points(
+        points, labels, image_size, input_size
     )
+    orig_im_size = np.array(image_size, dtype=np.int64)
+    inputs = [
+        image_embeddings, 
+        high_res_features1, 
+        high_res_features2,
+        input_point_coords, 
+        input_point_labels, 
+        mask_input, 
+        has_mask_input, 
+        orig_im_size
+    ]
+    print("decoder start")
+    start = time.perf_counter()
+    outputs = sessionDecoder.run(
+        output_names_decoder,
+        {
+            input_names_decoder[i]: inputs[i]
+            for i in range(len(input_names_decoder))
+        },
+    )
+    print(f"infer time: {(time.perf_counter() - start) * 1000:.2f} ms")
+    masks = outputs[0]
+    scores = outputs[1]
+    low_res_mask = outputs[2]
+    max_idx = np.argmax(scores[0])
+    masks = masks[0][max_idx]
     masks[masks > 0.0] = 255
     cv2.imwrite(mask_path, masks)
+    low_res_mask = low_res_mask[0][max_idx]
+    low_res_mask = np.array([[low_res_mask]])
     return low_res_mask
 
 def prepare_points(
