@@ -1,4 +1,4 @@
-## Segment Anything Model 2 CPP Wrapper for macOS and Ubuntu
+## Segment Anything Model 2 CPP Wrapper for macOS and Ubuntu CPU/GPU
 
 This code is to run a [Segment Anything Model 2](https://github.com/facebookresearch/sam2) ONNX model in c++ code and implemented on the macOS app [RectLabel](https://rectlabel.com).
 
