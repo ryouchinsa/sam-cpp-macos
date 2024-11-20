@@ -41,9 +41,10 @@ class Sam {
   bool preprocessImage(const cv::Mat& image);
   void preprocessingStart();
   void preprocessingEnd();
-  std::vector<int64_t> getInputPointShape(int numPoints);
-  std::vector<int64_t> getInputLabelShape(int numPoints);
-  cv::Mat getMask(const std::list<cv::Point>& points, const std::list<cv::Point>& negativePoints, const std::list<cv::Rect> &rects, int previousMaskIdx, bool isNextGetMask);
+  void setRectsLabels(const std::list<cv::Rect> &rects, std::vector<float> *inputPointValues, std::vector<float> *inputLabelValues);
+  void setPointsLabels(const std::list<cv::Point>& points, int label, std::vector<float> *inputPointValues, std::vector<float> *inputLabelValues);
+  cv::Mat getMaskBatch(std::vector<float> &inputPointValues, std::vector<float> &inputLabelValues, int batchNum, const cv::Size &imageSize);
+  cv::Mat getMask(std::vector<float> &inputPointValues, std::vector<float> &inputLabelValues, const cv::Size &imageSize, int previousMaskIdx, bool isNextGetMask);
 };
 
 #endif

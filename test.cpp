@@ -43,62 +43,89 @@ int main(int argc, char** argv) {
   }
   std::cout<<"getMask started"<<std::endl;
   begin = std::chrono::steady_clock::now();
-  cv::Point point1, point2;
-  cv::Rect rect;
-  cv::Mat mask;
-  std::list<cv::Point> points, nagativePoints;
   std::list<cv::Rect> rects;
+  std::list<cv::Point> points;
+  std::vector<float> inputPointValues, inputLabelValues;
   int previousMaskIdx = -1;
   bool isNextGetMask = true;
+  cv::Mat mask;
   
-  rect = cv::Rect(1215 * inputSize.width / imageSize.width,
-                  125 * inputSize.height / imageSize.height,
-                  508 * inputSize.width / imageSize.width,
-                  436 * inputSize.height / imageSize.height);
-  rects.push_back(rect);
-  mask = sam.getMask(points, nagativePoints, rects, previousMaskIdx, isNextGetMask);
-  previousMaskIdx++;
-  cv::resize(mask, mask, imageSize, 0, 0, cv::INTER_NEAREST);
-  cv::imwrite("mask_box.png", mask);
+  cv::Rect rect1 = cv::Rect(1215 * inputSize.width / imageSize.width,
+                            125 * inputSize.height / imageSize.height,
+                            508 * inputSize.width / imageSize.width,
+                            436 * inputSize.height / imageSize.height);
+  cv::Rect rect2 = cv::Rect(890 * inputSize.width / imageSize.width,
+                            85 * inputSize.height / imageSize.height,
+                            315 * inputSize.width / imageSize.width,
+                            460 * inputSize.height / imageSize.height);
+  rects.push_back(rect1);
+  rects.push_back(rect2);
+  sam.setRectsLabels(rects, &inputPointValues, &inputLabelValues);
+  int batchNum = (int)rects.size();
+  mask = sam.getMaskBatch(inputPointValues, inputLabelValues, batchNum, imageSize);
+  cv::imwrite("mask_box_batch.png", mask);
+  inputPointValues.resize(0);
+  inputLabelValues.resize(0);
   rects.resize(0);
   
-  point1 = cv::Point(1255 * inputSize.width / imageSize.width,
-                     360 * inputSize.height / imageSize.height);
-  points.push_back(point1);
-  point2 = cv::Point(1500 * inputSize.width / imageSize.width,
-                     420 * inputSize.height / imageSize.height);
-  points.push_back(point2);
-  mask = sam.getMask(points, nagativePoints, rects, previousMaskIdx, isNextGetMask);
+  rects.push_back(rect1);
+  sam.setRectsLabels(rects, &inputPointValues, &inputLabelValues);
+  mask = sam.getMask(inputPointValues, inputLabelValues, imageSize, previousMaskIdx, isNextGetMask);
   previousMaskIdx++;
-  cv::resize(mask, mask, imageSize, 0, 0, cv::INTER_NEAREST);
+  cv::imwrite("mask_box1.png", mask);
+  inputPointValues.resize(0);
+  inputLabelValues.resize(0);
+  rects.resize(0);
+  
+  rects.push_back(rect2);
+  sam.setRectsLabels(rects, &inputPointValues, &inputLabelValues);
+  mask = sam.getMask(inputPointValues, inputLabelValues, imageSize, previousMaskIdx, isNextGetMask);
+  previousMaskIdx++;
+  cv::imwrite("mask_box2.png", mask);
+  inputPointValues.resize(0);
+  inputLabelValues.resize(0);
+  rects.resize(0);
+  
+  cv::Point point1 = cv::Point(1255 * inputSize.width / imageSize.width,
+                               360 * inputSize.height / imageSize.height);
+  cv::Point point2 = cv::Point(1500 * inputSize.width / imageSize.width,
+                               420 * inputSize.height / imageSize.height);
+  points.push_back(point1);
+  points.push_back(point2);
+  sam.setPointsLabels(points, 1, &inputPointValues, &inputLabelValues);
+  mask = sam.getMask(inputPointValues, inputLabelValues, imageSize, previousMaskIdx, isNextGetMask);
+  previousMaskIdx++;
   cv::imwrite("mask_point12.png", mask);
+  inputPointValues.resize(0);
+  inputLabelValues.resize(0);
   points.resize(0);
   
-  point2 = cv::Point(1500 * inputSize.width / imageSize.width,
-                     420 * inputSize.height / imageSize.height);
   points.push_back(point2);
-  mask = sam.getMask(points, nagativePoints, rects, previousMaskIdx, isNextGetMask);
+  sam.setPointsLabels(points, 1, &inputPointValues, &inputLabelValues);
+  mask = sam.getMask(inputPointValues, inputLabelValues, imageSize, previousMaskIdx, isNextGetMask);
   previousMaskIdx++;
-  cv::resize(mask, mask, imageSize, 0, 0, cv::INTER_NEAREST);
   cv::imwrite("mask_point2.png", mask);
+  inputPointValues.resize(0);
+  inputLabelValues.resize(0);
   points.resize(0);
-  
-  point1 = cv::Point(1255 * inputSize.width / imageSize.width,
-                     360 * inputSize.height / imageSize.height);
+
   points.push_back(point1);
-  mask = sam.getMask(points, nagativePoints, rects, previousMaskIdx, isNextGetMask);
+  sam.setPointsLabels(points, 1, &inputPointValues, &inputLabelValues);
+  mask = sam.getMask(inputPointValues, inputLabelValues, imageSize, previousMaskIdx, isNextGetMask);
   previousMaskIdx++;
-  cv::resize(mask, mask, imageSize, 0, 0, cv::INTER_NEAREST);
   cv::imwrite("mask_point1.png", mask);
+  inputPointValues.resize(0);
+  inputLabelValues.resize(0);
   
   isNextGetMask = false;
-  point2 = cv::Point(1500 * inputSize.width / imageSize.width,
-                     420 * inputSize.height / imageSize.height);
   points.push_back(point2);
-  mask = sam.getMask(points, nagativePoints, rects, previousMaskIdx, isNextGetMask);
+  sam.setPointsLabels(points, 1, &inputPointValues, &inputLabelValues);
+  mask = sam.getMask(inputPointValues, inputLabelValues, imageSize, previousMaskIdx, isNextGetMask);
   previousMaskIdx++;
-  cv::resize(mask, mask, imageSize, 0, 0, cv::INTER_NEAREST);
   cv::imwrite("mask_point1_then_point2.png", mask);
+  inputPointValues.resize(0);
+  inputLabelValues.resize(0);
+  points.resize(0);
   
   end = std::chrono::steady_clock::now();
   std::cout << "sec = " << (std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()) / 1000000.0 <<std::endl;
