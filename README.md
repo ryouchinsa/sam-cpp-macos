@@ -39,7 +39,7 @@ Download an ONNX Runtime folder.
 - [onnxruntime-linux-x64-1.20.0.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.20.0/onnxruntime-linux-x64-1.20.0.tgz) for Ubuntu CPU
 - [onnxruntime-linux-x64-gpu-1.20.0.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.20.0/onnxruntime-linux-x64-gpu-1.20.0.tgz) for Ubuntu GPU
 
-![folder](https://github.com/user-attachments/assets/ee7c328f-17e1-4881-a2db-1942f3eee5a4)
+![folders](https://github.com/user-attachments/assets/fb0d3bbf-d5e9-4cee-8b9b-7c7a5c5af573)
 
 For Ubuntu, install gflags and opencv through [vcpkg](https://github.com/microsoft/vcpkg).
 ```bash
