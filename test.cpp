@@ -4,8 +4,8 @@
 #include <thread>
 #include "sam.h"
 
-DEFINE_string(encoder, "sam2_tiny/sam2_tiny_preprocess.onnx", "Path to the encoder model");
-DEFINE_string(decoder, "sam2_tiny/sam2_tiny.onnx", "Path to the decoder model");
+DEFINE_string(encoder, "sam2.1_tiny/sam2.1_tiny_preprocess.onnx", "Path to the encoder model");
+DEFINE_string(decoder, "sam2.1_tiny/sam2.1_tiny.onnx", "Path to the decoder model");
 DEFINE_string(image, "david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg", "Path to the image");
 DEFINE_string(device, "cpu", "cpu or cuda:0(1,2,3...)");
 DEFINE_bool(h, false, "Show help");
@@ -13,8 +13,8 @@ DEFINE_bool(h, false, "Show help");
 int main(int argc, char** argv) {
   gflags::ParseCommandLineNonHelpFlags(&argc, &argv, true);
   if(FLAGS_h){
-    std::cout<<"Example: ./build/sam_cpp_test -encoder=\"sam2_tiny/sam2_tiny_preprocess.onnx\" "
-               "-decoder=\"sam2_tiny/sam2_tiny.onnx\" "
+    std::cout<<"Example: ./build/sam_cpp_test -encoder=\"sam2.1_tiny/sam2.1_tiny_preprocess.onnx\" "
+               "-decoder=\"sam2.1_tiny/sam2.1_tiny.onnx\" "
                "-image=\"david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg\" -device=\"cpu\""<< std::endl;
     return 0;
   }

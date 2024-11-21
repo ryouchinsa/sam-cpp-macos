@@ -128,27 +128,29 @@ class ImageDecoder(nn.Module):
         ) * self.prompt_encoder.no_mask_embed.weight.reshape(1, -1, 1, 1)
         return mask_embedding
 
-def export_image_encoder(model,onnx_path):
+def export_image_encoder(model, onnx_path):
+    onnx_path = onnx_path + [x for x in onnx_path.split('/') if x][-1] + "_preprocess.onnx"
     input_img = torch.randn(1, 3,1024, 1024).cpu()
     out = model(input_img)
     output_names = ["image_embeddings","high_res_features1","high_res_features2"]
     torch.onnx.export(
         model,
         input_img,
-        onnx_path+"image_encoder.onnx",
+        onnx_path,
         export_params=True,
         opset_version=17,
         do_constant_folding=True,
         input_names=["input"],
         output_names=output_names,
     )
-    original_model = onnx.load(onnx_path+"image_encoder.onnx")
+    original_model = onnx.load(onnx_path)
     simplified_model, check = simplify(original_model)
-    onnx.save(simplified_model, onnx_path+"image_encoder.onnx")
-    onnx_model = onnx.load(onnx_path+"image_encoder.onnx")
+    onnx.save(simplified_model, onnx_path)
+    onnx_model = onnx.load(onnx_path)
     onnx.checker.check_model(onnx_model)
 
-def export_image_decoder(model,onnx_path):
+def export_image_decoder(model, onnx_path):
+    onnx_path = onnx_path + [x for x in onnx_path.split('/') if x][-1] + ".onnx"
     image_embeddings = torch.randn(1,256,64,64).cpu()
     high_res_features1 = torch.randn(1,32,256,256).cpu()
     high_res_features2 = torch.randn(1,64,128,128).cpu()
@@ -196,7 +198,7 @@ def export_image_decoder(model,onnx_path):
             has_mask_input,
             orig_im_size
         ),
-        onnx_path+"image_decoder.onnx",
+        onnx_path,
         export_params=True,
         opset_version=17,
         do_constant_folding=True,
@@ -204,15 +206,17 @@ def export_image_decoder(model,onnx_path):
         output_names=output_name,
         dynamic_axes = dynamic_axes
     )
-    original_model = onnx.load(onnx_path+"image_decoder.onnx")
+    original_model = onnx.load(onnx_path)
     simplified_model, check = simplify(original_model)
-    onnx.save(simplified_model, onnx_path+"image_decoder.onnx")
-    onnx_model = onnx.load(onnx_path+"image_decoder.onnx")
+    onnx.save(simplified_model, onnx_path)
+    onnx_model = onnx.load(onnx_path)
     onnx.checker.check_model(onnx_model)
 
 def import_onnx(args):
+    onnx_path = args.outdir
+    encoder_path = onnx_path + [x for x in onnx_path.split('/') if x][-1] + "_preprocess.onnx"
     session = onnxruntime.InferenceSession(
-        args.outdir+"image_encoder.onnx", providers=onnxruntime.get_available_providers()
+        encoder_path, providers=onnxruntime.get_available_providers()
     )
     model_inputs = session.get_inputs()
     input_names = [
@@ -243,8 +247,9 @@ def import_onnx(args):
     )
     print(f"infer time: {(time.perf_counter() - start) * 1000:.2f} ms")
 
+    decoder_path = onnx_path + [x for x in onnx_path.split('/') if x][-1] + ".onnx"
     sessionDecoder = onnxruntime.InferenceSession(
-        args.outdir+"image_decoder.onnx", providers=onnxruntime.get_available_providers()
+        decoder_path, providers=onnxruntime.get_available_providers()
     )
     model_inputs_decoder = sessionDecoder.get_inputs()
     input_names_decoder = [
@@ -431,17 +436,17 @@ def export_onnx(args):
     sam2_model = build_sam2(args.config, args.checkpoint, device="cpu")
 
     image_encoder = ImageEncoder(sam2_model).cpu()
-    export_image_encoder(image_encoder,args.outdir)
+    export_image_encoder(image_encoder, args.outdir)
 
     image_decoder = ImageDecoder(sam2_model).cpu()
-    export_image_decoder(image_decoder,args.outdir)
+    export_image_decoder(image_decoder, args.outdir)
 
 model_idx = 0
 model_type = ["tiny","small","base_plus","large"][model_idx]
 config_type = ["t","s","b+","l"][model_idx]
 version_idx = 1
 version_type = ["2","2.1"][version_idx]
-onnx_output_path = "checkpoints/{}/".format(model_type)
+onnx_output_path = "checkpoints/sam{}_{}/".format(version_type, model_type)
 model_config_file = "sam{}_hiera_{}.yaml".format(version_type, config_type)
 model_checkpoints_file = "checkpoints/sam{}_hiera_{}.pt".format(version_type, model_type)
 if not os.path.exists(onnx_output_path):
@@ -454,7 +459,6 @@ if __name__ == "__main__":
     parser.add_argument("--checkpoint",type=str,default=model_checkpoints_file,required=False,help="*.pt")
     parser.add_argument("--mode",type=str,default="export",required=False,help="export or import")
     parser.add_argument("--image",type=str,default="david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg",required=False,help="image path")
-    parser.add_argument("--output",type=str,default="mask.png",required=False,help="mask path")
     args = parser.parse_args()
     if args.mode == "export":
         export_onnx(args)
