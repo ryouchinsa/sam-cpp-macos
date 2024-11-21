@@ -28,7 +28,7 @@ To check how the ONNX model works.
 python export_onnx.py --mode import
 ```
 
-You can download exported ONNX models.
+You can download exported SAM 2.1 ONNX models.
 - [SAM2 Tiny](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2_tiny.zip)
 - [SAM2 Small](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2_small.zip)
 - [SAM2 BasePlus](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2_base_plus.zip)
