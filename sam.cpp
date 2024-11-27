@@ -51,6 +51,10 @@ void Sam::changeMode(SamMode modeTo){
   mode = modeTo;
 }
 
+SamMode Sam::getMode(){
+  return mode;
+}
+
 bool modelExists(const std::string& modelPath){
   std::ifstream f(modelPath);
   if (!f.good()) {
@@ -265,16 +269,21 @@ cv::Mat Sam::getMaskBatch(std::vector<float> &inputPointValues, std::vector<floa
   hasMaskInputShape = {1};
   inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, maskInputValues, maskInputSize, maskInputShape.data(), maskInputShape.size()));
   inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, hasMaskValues, 1, hasMaskInputShape.data(), hasMaskInputShape.size()));
-  float orig_im_size_values_float[] = {(float)imageSize.height, (float)imageSize.width};
-  int64_t orig_im_size_values_int64[] = {(int)imageSize.height, (int)imageSize.width};
+  int maskWidth, maskHeight;
   if(mode == SAM2){
+    maskWidth = imageSize.width;
+    maskHeight = imageSize.height;
+    int64_t orig_im_size_values_int64[] = {maskHeight, maskWidth};
     std::vector<int64_t> origImSizeShape = {2};
     inputTensors.push_back(Ort::Value::CreateTensor<int64_t>(memoryInfo, orig_im_size_values_int64, 2, origImSizeShape.data(), origImSizeShape.size()));
   }else{
+    maskWidth = (int)inputShapeEncoder[3];
+    maskHeight = (int)inputShapeEncoder[2];
+    float orig_im_size_values_float[] = {(float)maskHeight, (float)maskWidth};
     std::vector<int64_t> origImSizeShape = {2};
     inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, orig_im_size_values_float, 2, origImSizeShape.data(), origImSizeShape.size()));
   }
-  cv::Mat outputMask = cv::Mat((int)imageSize.height, (int)imageSize.width, CV_8UC1, cv::Scalar(0));
+  cv::Mat outputMask = cv::Mat(maskHeight, maskWidth, CV_8UC1, cv::Scalar(0));
   try{
     Ort::RunOptions runOptionsDecoder;
     std::vector<const char*> inputNames = getInputNames(sessionDecoder);
@@ -290,10 +299,8 @@ cv::Mat Sam::getMaskBatch(std::vector<float> &inputPointValues, std::vector<floa
       auto scoreShape = outputTensors[1].GetTensorTypeAndShapeInfo().GetShape();
       auto scoreValues = outputTensors[1].GetTensorMutableData<float>();
       auto maskValues = outputTensors[0].GetTensorMutableData<float>();
-      int batchNum = scoreShape[0];
-      int scoreNum = scoreShape[1];
-      std::cout<<batchNum<<std::endl;
-      std::cout<<scoreNum<<std::endl;
+      int batchNum = (int)scoreShape[0];
+      int scoreNum = (int)scoreShape[1];
       for(int k = 0; k < batchNum; k++){
         float maxScore = 0;
         int maxScoreIdx = 0;
@@ -303,9 +310,7 @@ cv::Mat Sam::getMaskBatch(std::vector<float> &inputPointValues, std::vector<floa
             maxScore = scoreValues[offsetScore + i];
             maxScoreIdx = i;
           }
-          std::cout<<scoreValues[offsetScore + i]<<std::endl;
         }
-        std::cout<<"maxScore "<<maxScore<<" maxScoreIdx "<<maxScoreIdx<<std::endl;
         int offsetMask = k * scoreNum * outputMask.rows * outputMask.cols + maxScoreIdx * outputMask.rows * outputMask.cols;
         for (int i = 0; i < outputMask.rows; i++) {
           for (int j = 0; j < outputMask.cols; j++) {
@@ -315,6 +320,14 @@ cv::Mat Sam::getMaskBatch(std::vector<float> &inputPointValues, std::vector<floa
           }
         }
       }
+    }else{
+      auto maskValues = outputTensors[0].GetTensorMutableData<float>();
+      for (int i = 0; i < outputMask.rows; i++) {
+        for (int j = 0; j < outputMask.cols; j++) {
+          outputMask.at<uchar>(i, j) = maskValues[i * outputMask.cols + j] > 0 ? 255 : 0;
+        }
+      }
+      cv::resize(outputMask, outputMask, imageSize, 0, 0, cv::INTER_NEAREST);
     }
   }catch(Ort::Exception& e){
     std::cout << e.what() << std::endl;
@@ -354,16 +367,21 @@ cv::Mat Sam::getMask(std::vector<float> &inputPointValues, std::vector<float> &i
     inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, maskInputValues, maskInputSize, maskInputShape.data(), maskInputShape.size()));
   }
   inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, hasMaskValues, 1, hasMaskInputShape.data(), hasMaskInputShape.size()));
-  float orig_im_size_values_float[] = {(float)imageSize.height, (float)imageSize.width};
-  int64_t orig_im_size_values_int64[] = {(int)imageSize.height, (int)imageSize.width};
+  int maskWidth, maskHeight;
   if(mode == SAM2){
+    maskWidth = imageSize.width;
+    maskHeight = imageSize.height;
+    int64_t orig_im_size_values_int64[] = {maskHeight, maskWidth};
     std::vector<int64_t> origImSizeShape = {2};
     inputTensors.push_back(Ort::Value::CreateTensor<int64_t>(memoryInfo, orig_im_size_values_int64, 2, origImSizeShape.data(), origImSizeShape.size()));
   }else{
+    maskWidth = (int)inputShapeEncoder[3];
+    maskHeight = (int)inputShapeEncoder[2];
+    float orig_im_size_values_float[] = {(float)maskHeight, (float)maskWidth};
     std::vector<int64_t> origImSizeShape = {2};
     inputTensors.push_back(Ort::Value::CreateTensor<float>(memoryInfo, orig_im_size_values_float, 2, origImSizeShape.data(), origImSizeShape.size()));
   }
-  cv::Mat outputMask = cv::Mat((int)imageSize.height, (int)imageSize.width, CV_8UC1);
+  cv::Mat outputMask = cv::Mat(maskHeight, maskWidth, CV_8UC1);
   try{
     Ort::RunOptions runOptionsDecoder;
     std::vector<const char*> inputNames = getInputNames(sessionDecoder);
@@ -380,7 +398,7 @@ cv::Mat Sam::getMask(std::vector<float> &inputPointValues, std::vector<float> &i
     if(mode == SAM2){
       auto scoreShape = outputTensors[1].GetTensorTypeAndShapeInfo().GetShape();
       auto scoreValues = outputTensors[1].GetTensorMutableData<float>();
-      int scoreNum = scoreShape[1];
+      int scoreNum = (int)scoreShape[1];
       for(int i = 0; i < scoreNum; i++){
         if(scoreValues[i] > maxScore){
           maxScore = scoreValues[i];
@@ -395,6 +413,9 @@ cv::Mat Sam::getMask(std::vector<float> &inputPointValues, std::vector<float> &i
       for (int j = 0; j < outputMask.cols; j++) {
         outputMask.at<uchar>(i, j) = maskValues[offsetMask + i * outputMask.cols + j] > 0 ? 255 : 0;
       }
+    }
+    if(mode == SAM){
+      cv::resize(outputMask, outputMask, imageSize, 0, 0, cv::INTER_NEAREST);
     }
     previousMaskInputValues = std::vector<float>(maskInputSize);
     auto low_res_logits = outputTensors[2].GetTensorMutableData<float>();

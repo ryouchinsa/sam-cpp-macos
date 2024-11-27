@@ -34,6 +34,7 @@ class Sam {
   void resizePreviousMasks(int previousMaskIdx);
   void terminatePreprocessing();
   void changeMode(SamMode modeTo);
+  SamMode getMode();
   bool loadModel(const std::string& encoderPath, const std::string& decoderPath, int threadsNumber, std::string device = "cpu");
   void loadingStart();
   void loadingEnd();

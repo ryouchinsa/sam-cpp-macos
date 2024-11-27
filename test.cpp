@@ -58,15 +58,17 @@ int main(int argc, char** argv) {
                             85 * inputSize.height / imageSize.height,
                             315 * inputSize.width / imageSize.width,
                             460 * inputSize.height / imageSize.height);
-  rects.push_back(rect1);
-  rects.push_back(rect2);
-  sam.setRectsLabels(rects, &inputPointValues, &inputLabelValues);
-  int batchNum = (int)rects.size();
-  mask = sam.getMaskBatch(inputPointValues, inputLabelValues, batchNum, imageSize);
-  cv::imwrite("mask_box_batch.png", mask);
-  inputPointValues.resize(0);
-  inputLabelValues.resize(0);
-  rects.resize(0);
+  if(sam.getMode() == SAM2){
+    rects.push_back(rect1);
+    rects.push_back(rect2);
+    sam.setRectsLabels(rects, &inputPointValues, &inputLabelValues);
+    int batchNum = (int)rects.size();
+    mask = sam.getMaskBatch(inputPointValues, inputLabelValues, batchNum, imageSize);
+    cv::imwrite("mask_box_batch.png", mask);
+    inputPointValues.resize(0);
+    inputLabelValues.resize(0);
+    rects.resize(0);
+  }
   
   rects.push_back(rect1);
   sam.setRectsLabels(rects, &inputPointValues, &inputLabelValues);
