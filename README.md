@@ -6,7 +6,7 @@ This code is to run a [Segment Anything Model 2](https://github.com/facebookrese
 
 Install [Segment Anything Model 2](https://github.com/facebookresearch/sam2) and download checkpoints.
 
-![checkpoints](https://github.com/user-attachments/assets/0a905f19-6cb8-4231-a355-df6b1e8f1ab0)
+![checkpoints](https://github.com/user-attachments/assets/f57c57a3-f689-466e-b883-8d8caf931d11)
 
 Copy yaml files in sam2/configs/sam2.1 to sam2.
 
@@ -29,17 +29,17 @@ python export_onnx.py --mode import
 ```
 
 You can download exported SAM 2.1 ONNX models.
-- [SAM2 Tiny](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2_tiny.zip)
-- [SAM2 Small](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2_small.zip)
-- [SAM2 BasePlus](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2_base_plus.zip)
-- [SAM2 Large](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2_large.zip)
+- [SAM 2.1 Tiny](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2.1_tiny.zip)
+- [SAM 2.1 Small](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2.1_small.zip)
+- [SAM 2.1 BasePlus](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2.1_base_plus.zip)
+- [SAM 2.1 Large](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2.1_large.zip)
 
 Download an ONNX Runtime folder.
 - [onnxruntime-osx-universal2-1.20.0.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.20.0/onnxruntime-osx-universal2-1.20.0.tgz) for macOS
 - [onnxruntime-linux-x64-1.20.0.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.20.0/onnxruntime-linux-x64-1.20.0.tgz) for Ubuntu CPU
 - [onnxruntime-linux-x64-gpu-1.20.0.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.20.0/onnxruntime-linux-x64-gpu-1.20.0.tgz) for Ubuntu GPU
 
-![folder](https://github.com/user-attachments/assets/ee7c328f-17e1-4881-a2db-1942f3eee5a4)
+![folders](https://github.com/user-attachments/assets/fb0d3bbf-d5e9-4cee-8b9b-7c7a5c5af573)
 
 For Ubuntu, install gflags and opencv through [vcpkg](https://github.com/microsoft/vcpkg).
 ```bash
@@ -87,7 +87,7 @@ cmake -S . -B build -DONNXRUNTIME_ROOT_DIR=/root/onnxruntime-linux-x64-gpu-1.20.
 cmake --build build
 
 # macOS and Ubuntu CPU
-./build/sam_cpp_test -encoder="sam2_tiny/sam2_tiny_preprocess.onnx" -decoder="sam2_tiny/sam2_tiny.onnx" -image="david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg" -device="cpu"
+./build/sam_cpp_test -encoder="sam2.1_tiny/sam2.1_tiny_preprocess.onnx" -decoder="sam2.1_tiny/sam2.1_tiny.onnx" -image="david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg" -device="cpu"
 # Ubuntu GPU
-./build/sam_cpp_test -encoder="sam2_tiny/sam2_tiny_preprocess.onnx" -decoder="sam2_tiny/sam2_tiny.onnx" -image="david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg" -device="cuda:0"
+./build/sam_cpp_test -encoder="sam2.1_tiny/sam2.1_tiny_preprocess.onnx" -decoder="sam2.1_tiny/sam2.1_tiny.onnx" -image="david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg" -device="cuda:0"
 ```
