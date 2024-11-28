@@ -44,6 +44,10 @@ class Sam {
   void preprocessingEnd();
   void setRectsLabels(const std::list<cv::Rect> &rects, std::vector<float> *inputPointValues, std::vector<float> *inputLabelValues);
   void setPointsLabels(const std::list<cv::Point>& points, int label, std::vector<float> *inputPointValues, std::vector<float> *inputLabelValues);
+  void setDecorderTensorsEmbeddings(std::vector<Ort::Value> *inputTensors);
+  void setDecorderTensorsPointsLabels(std::vector<float> &inputPointValues, std::vector<float> &inputLabelValues, int batchNum, int numPoints, std::vector<Ort::Value> *inputTensors);
+  void setDecorderTensorsMaskInput(const size_t maskInputSize, float *maskInputValues, float *hasMaskValues, std::vector<float> &previousMaskInputValues, std::vector<Ort::Value> *inputTensors);
+  cv::Mat setDecorderTensorsImageSize(std::vector<int64_t> &orig_im_size_values_int64, std::vector<float> &orig_im_size_values_float, std::vector<Ort::Value> *inputTensors);
   cv::Mat getMaskBatch(std::vector<float> &inputPointValues, std::vector<float> &inputLabelValues, int batchNum, const cv::Size &imageSize);
   cv::Mat getMask(std::vector<float> &inputPointValues, std::vector<float> &inputLabelValues, const cv::Size &imageSize, int previousMaskIdx, bool isNextGetMask);
 };
