@@ -215,8 +215,11 @@ def export_image_decoder(model, onnx_path):
 def import_onnx(args):
     onnx_path = args.outdir
     encoder_path = onnx_path + [x for x in onnx_path.split('/') if x][-1] + "_preprocess.onnx"
+    print("get_available_providers", onnxruntime.get_available_providers())
     session = onnxruntime.InferenceSession(
         encoder_path, providers=onnxruntime.get_available_providers()
+        # CPU
+        # encoder_path, providers=["CPUExecutionProvider"]
     )
     model_inputs = session.get_inputs()
     input_names = [
@@ -250,6 +253,8 @@ def import_onnx(args):
     decoder_path = onnx_path + [x for x in onnx_path.split('/') if x][-1] + ".onnx"
     sessionDecoder = onnxruntime.InferenceSession(
         decoder_path, providers=onnxruntime.get_available_providers()
+        # CPU
+        # decoder_path, providers=["CPUExecutionProvider"]
     )
     model_inputs_decoder = sessionDecoder.get_inputs()
     input_names_decoder = [
@@ -326,7 +331,6 @@ def import_onnx(args):
     
     points.append([1500, 420])
     labels.append(1)
-    num_labels = len(labels)
     has_mask_input = np.array([1], dtype=np.float32)
     decode("mask_point1_then_point2.png", low_res_mask, has_mask_input, input_size, image_size, sessionDecoder, input_names_decoder, output_names_decoder, points, labels, image_embeddings, high_res_features1, high_res_features2)
 
@@ -400,12 +404,12 @@ def decode(mask_path, mask_input, has_mask_input, input_size, image_size, sessio
     print(f"infer time: {(time.perf_counter() - start) * 1000:.2f} ms")
     masks = outputs[0]
     scores = outputs[1]
-    low_res_mask = outputs[2]
+    low_res_masks = outputs[2]
     max_idx = np.argmax(scores[0])
-    masks = masks[0][max_idx]
-    masks[masks > 0.0] = 255
-    cv2.imwrite(mask_path, masks)
-    low_res_mask = low_res_mask[0][max_idx]
+    mask = masks[0][max_idx]
+    mask[mask > 0.0] = 255
+    cv2.imwrite(mask_path, mask)
+    low_res_mask = low_res_masks[0][max_idx]
     low_res_mask = np.array([[low_res_mask]])
     return low_res_mask
 
