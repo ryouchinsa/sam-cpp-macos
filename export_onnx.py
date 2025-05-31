@@ -130,7 +130,7 @@ class ImageDecoder(nn.Module):
 
 def export_image_encoder(model, onnx_path):
     onnx_path = onnx_path + [x for x in onnx_path.split('/') if x][-1] + "_preprocess.onnx"
-    input_img = torch.randn(1, 3,1024, 1024).cpu()
+    input_img = torch.randn(1, 3,1024, 1024)
     out = model(input_img)
     output_names = ["image_embeddings","high_res_features1","high_res_features2"]
     torch.onnx.export(
@@ -151,11 +151,11 @@ def export_image_encoder(model, onnx_path):
 
 def export_image_decoder(model, onnx_path):
     onnx_path = onnx_path + [x for x in onnx_path.split('/') if x][-1] + ".onnx"
-    image_embeddings = torch.randn(1,256,64,64).cpu()
-    high_res_features1 = torch.randn(1,32,256,256).cpu()
-    high_res_features2 = torch.randn(1,64,128,128).cpu()
-    point_coords = torch.randn(1,2,2).cpu()
-    point_labels = torch.randn(1,2).cpu()
+    image_embeddings = torch.randn(1,256,64,64)
+    high_res_features1 = torch.randn(1,32,256,256)
+    high_res_features2 = torch.randn(1,64,128,128)
+    point_coords = torch.randn(1,2,2)
+    point_labels = torch.randn(1,2)
     mask_input = torch.randn(1, 1, 256, 256, dtype=torch.float)
     has_mask_input = torch.tensor([1], dtype=torch.float)
     orig_im_size = torch.tensor([1024,1024],dtype=torch.int64)
@@ -217,9 +217,8 @@ def import_onnx(args):
     encoder_path = onnx_path + [x for x in onnx_path.split('/') if x][-1] + "_preprocess.onnx"
     print("get_available_providers", onnxruntime.get_available_providers())
     session = onnxruntime.InferenceSession(
-        encoder_path, providers=onnxruntime.get_available_providers()
-        # CPU
-        # encoder_path, providers=["CPUExecutionProvider"]
+        # encoder_path, providers=onnxruntime.get_available_providers()
+        encoder_path, providers=["CPUExecutionProvider"]
     )
     model_inputs = session.get_inputs()
     input_names = [
@@ -252,9 +251,8 @@ def import_onnx(args):
 
     decoder_path = onnx_path + [x for x in onnx_path.split('/') if x][-1] + ".onnx"
     sessionDecoder = onnxruntime.InferenceSession(
-        decoder_path, providers=onnxruntime.get_available_providers()
-        # CPU
-        # decoder_path, providers=["CPUExecutionProvider"]
+        # decoder_path, providers=onnxruntime.get_available_providers()
+        decoder_path, providers=["CPUExecutionProvider"]
     )
     model_inputs_decoder = sessionDecoder.get_inputs()
     input_names_decoder = [
@@ -439,10 +437,10 @@ def export_onnx(args):
     print(args.checkpoint)
     sam2_model = build_sam2(args.config, args.checkpoint, device="cpu")
 
-    image_encoder = ImageEncoder(sam2_model).cpu()
+    image_encoder = ImageEncoder(sam2_model)
     export_image_encoder(image_encoder, args.outdir)
 
-    image_decoder = ImageDecoder(sam2_model).cpu()
+    image_decoder = ImageDecoder(sam2_model)
     export_image_decoder(image_decoder, args.outdir)
 
 model_idx = 0
