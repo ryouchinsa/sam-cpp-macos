@@ -28,50 +28,42 @@ To check how the ONNX model works.
 python export_onnx.py --mode import
 ```
 
-You can download exported SAM 2.1 ONNX models.
+Download exported SAM 2.1 ONNX models.
 - [SAM 2.1 Tiny](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2.1_tiny.zip)
 - [SAM 2.1 Small](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2.1_small.zip)
 - [SAM 2.1 BasePlus](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2.1_base_plus.zip)
 - [SAM 2.1 Large](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2.1_large.zip)
 
-Download an ONNX Runtime folder.
+Download ONNX Runtime.
 - [onnxruntime-osx-universal2-1.20.0.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.20.0/onnxruntime-osx-universal2-1.20.0.tgz) for macOS
 - [onnxruntime-linux-x64-1.20.0.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.20.0/onnxruntime-linux-x64-1.20.0.tgz) for Ubuntu CPU
 - [onnxruntime-linux-x64-gpu-1.20.0.tgz](https://github.com/microsoft/onnxruntime/releases/download/v1.20.0/onnxruntime-linux-x64-gpu-1.20.0.tgz) for Ubuntu GPU
 
 ![folders](https://github.com/user-attachments/assets/fb0d3bbf-d5e9-4cee-8b9b-7c7a5c5af573)
 
-For Ubuntu, install gflags and opencv through [vcpkg](https://github.com/microsoft/vcpkg).
+For Ubuntu, install packages including gflags and opencv.
 ```bash
-git clone https://github.com/microsoft/vcpkg.git
-./vcpkg/bootstrap-vcpkg.sh
-./vcpkg/vcpkg install gflags
-./vcpkg/vcpkg install opencv
+sudo apt-get update
+sudo apt-get install build-essential tar curl zip unzip autopoint libtool bison libx11-dev libxft-dev libxext-dev libxrandr-dev libxi-dev libxcursor-dev libxdamage-dev libxinerama-dev libxtst-dev cmake libgflags-dev libopencv-dev python3-dev
 ```
 
-For Ubuntu GPU, install cuda and cudnn.
+For Ubuntu GPU, install CUDA and cuDNN.
 ```bash
-wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
+wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb
 sudo dpkg -i cuda-keyring_1.1-1_all.deb
-sudo apt update
 sudo apt install cuda-drivers
-reboot
 nvidia-smi
 
-sudo apt install cuda-toolkit-11-8
+sudo apt install cuda-toolkit-12-8
 vi ~/.bashrc
 export PATH="/usr/local/cuda/bin${PATH:+:${PATH}}"
 export LD_LIBRARY_PATH="/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 source ~/.bashrc
-which nvcc
 nvcc --version
 
-apt list libcudnn8 -a
-cudnn_version=8.9.7.29
-cuda_version=cuda11.8
-sudo apt install libcudnn8=${cudnn_version}-1+${cuda_version}
-sudo apt install libcudnn8-dev=${cudnn_version}-1+${cuda_version}
-sudo apt install libcudnn8-samples=${cudnn_version}-1+${cuda_version}
+apt-cache search libcudnn
+sudo apt install libcudnn9-cuda-12
+sudo apt install libcudnn9-dev-cuda-12
 ```
 
 Build and run.
