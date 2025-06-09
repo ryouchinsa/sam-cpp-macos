@@ -18,15 +18,10 @@ Put [export_onnx.py](https://github.com/ryouchinsa/sam-cpp-macos/blob/master/exp
 
 ![export](https://github.com/user-attachments/assets/0fc7dcce-8f38-403b-b84e-bb38fea0eeca)
 
-To export an ONNX model.
+Export an ONNX model and check how the ONNX model works.
 
 ```bash
 python export_onnx.py --mode export
-```
-
-To check how the ONNX model works.
-
-```bash
 python export_onnx.py --mode import
 ```
 
