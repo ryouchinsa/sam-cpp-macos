@@ -31,8 +31,6 @@ Download exported SAM 2.1 ONNX models.
 - [SAM 2.1 BasePlus](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2.1_base_plus.zip)
 - [SAM 2.1 Large](https://huggingface.co/rectlabel/segment-anything-onnx-models/resolve/main/sam2.1_large.zip)
 
-![folders](https://github.com/user-attachments/assets/fb0d3bbf-d5e9-4cee-8b9b-7c7a5c5af573)
-
 Build and run.
 
 ```bash
