@@ -215,10 +215,13 @@ def export_image_decoder(model, onnx_path):
 def import_onnx(args):
     onnx_path = args.outdir
     encoder_path = onnx_path + [x for x in onnx_path.split('/') if x][-1] + "_preprocess.onnx"
-    print("get_available_providers", onnxruntime.get_available_providers())
+    print(onnxruntime.get_available_providers())
+    if torch.cuda.is_available():
+        providers=["CUDAExecutionProvider"]
+    else:
+        providers=["CPUExecutionProvider"]
     session = onnxruntime.InferenceSession(
-        # encoder_path, providers=onnxruntime.get_available_providers()
-        encoder_path, providers=["CPUExecutionProvider"]
+        encoder_path, providers=providers
     )
     model_inputs = session.get_inputs()
     input_names = [
