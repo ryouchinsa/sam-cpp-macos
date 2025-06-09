@@ -31,6 +31,8 @@ Export an ONNX model and check how the ONNX model works.
 ```bash
 python export_onnx.py --mode export
 python export_onnx.py --mode import
+cp -r checkpoints/sam2.1_tiny sam-cpp-macos
+cd sam-cpp-macos
 ```
 
 Download exported SAM 2.1 ONNX models.
