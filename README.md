@@ -6,7 +6,7 @@ This code is to run a [Segment Anything Model 2](https://github.com/facebookrese
 
 Install [CUDA, cuDNN, PyTorch, and ONNX Runtime](https://rectlabel.com/pytorch/).
 
-Install [Segment Anything Model 2](https://github.com/facebookresearch/sam2) and download checkpoints.
+Install [Segment Anything Model 2](https://github.com/facebookresearch/sam2), download checkpoints and copy yaml files in sam2/configs/sam2.1 to sam2.
 
 ```bash
 git clone https://github.com/facebookresearch/sam2.git && cd sam2
@@ -14,13 +14,10 @@ pip install -e .
 cd checkpoints
 ./download_ckpts.sh
 cd ..
+cp sam2/configs/sam2.1/*.yaml sam2
 ```
 
-![checkpoints](https://github.com/user-attachments/assets/f57c57a3-f689-466e-b883-8d8caf931d11)
-
-Copy yaml files in sam2/configs/sam2.1 to sam2.
-
-![configs](https://github.com/user-attachments/assets/39827d2f-76ba-4904-bc59-9e0716af6cda)
+![sam2](https://github.com/user-attachments/assets/4a76d0f1-d0af-4483-bdd6-58246201cc94)
 
 Put [export_onnx.py](https://github.com/ryouchinsa/sam-cpp-macos/blob/master/export_onnx.py) and david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg to the root folder.
 
