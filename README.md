@@ -8,6 +8,14 @@ Install [CUDA, cuDNN, PyTorch, and ONNX Runtime](https://rectlabel.com/pytorch/)
 
 Install [Segment Anything Model 2](https://github.com/facebookresearch/sam2) and download checkpoints.
 
+```bash
+git clone https://github.com/facebookresearch/sam2.git && cd sam2
+pip install -e .
+cd checkpoints
+./download_ckpts.sh
+cd ..
+```
+
 ![checkpoints](https://github.com/user-attachments/assets/f57c57a3-f689-466e-b883-8d8caf931d11)
 
 Copy yaml files in sam2/configs/sam2.1 to sam2.
