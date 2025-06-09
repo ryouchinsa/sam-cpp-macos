@@ -19,9 +19,12 @@ cp sam2/configs/sam2.1/*.yaml sam2
 
 ![sam2](https://github.com/user-attachments/assets/4a76d0f1-d0af-4483-bdd6-58246201cc94)
 
-Put [export_onnx.py](https://github.com/ryouchinsa/sam-cpp-macos/blob/master/export_onnx.py) and david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg to the root folder.
-
-![export](https://github.com/user-attachments/assets/0fc7dcce-8f38-403b-b84e-bb38fea0eeca)
+Install Segment Anything Model 2 CPP Wrapper.
+```bash
+git clone https://github.com/ryouchinsa/sam-cpp-macos.git
+cp sam-cpp-macos/export_onnx.py .
+cp sam-cpp-macos/david-tomaseti-Vw2HZQ1FGjU-unsplash.jpg .
+```
 
 Export an ONNX model and check how the ONNX model works.
 
