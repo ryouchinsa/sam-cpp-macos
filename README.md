@@ -17,8 +17,6 @@ cd ..
 cp sam2/configs/sam2.1/*.yaml sam2
 ```
 
-![sam2](https://github.com/user-attachments/assets/4a76d0f1-d0af-4483-bdd6-58246201cc94)
-
 Install Segment Anything Model 2 CPP Wrapper.
 ```bash
 git clone https://github.com/ryouchinsa/sam-cpp-macos.git
