@@ -55,14 +55,6 @@ SamMode Sam::getMode(){
   return mode;
 }
 
-bool modelExists(const std::string& modelPath){
-  std::ifstream f(modelPath);
-  if (!f.good()) {
-    return false;
-  }
-  return true;
-}
-
 bool Sam::loadModel(const std::string& encoderPath, const std::string& decoderPath, int threadsNumber, std::string device){
   try{
     loadingStart();
@@ -119,34 +111,6 @@ void Sam::loadingEnd(){
 
 cv::Size Sam::getInputSize(){
   return cv::Size((int)inputShapeEncoder[3], (int)inputShapeEncoder[2]);
-}
-
-std::vector<const char*> getInputNames(std::unique_ptr<Ort::Session> &session){
-  std::vector<const char*> inputNames;
-  Ort::AllocatorWithDefaultOptions allocator;
-  for (size_t i = 0; i < session->GetInputCount(); ++i) {
-    Ort::AllocatedStringPtr name_Ptr = session->GetInputNameAllocated(i, allocator);
-    char* name = name_Ptr.get();
-    size_t name_length = strlen(name) + 1;
-    char* name_new = new char[name_length];
-    strncpy(name_new, name, name_length);
-    inputNames.push_back(name_new);
-  }
-  return inputNames;
-}
-
-std::vector<const char*> getOutputNames(std::unique_ptr<Ort::Session> &session){
-  std::vector<const char*> outputNames;
-  Ort::AllocatorWithDefaultOptions allocator;
-  for (size_t i = 0; i < session->GetOutputCount(); ++i) {
-    Ort::AllocatedStringPtr name_Ptr = session->GetOutputNameAllocated(i, allocator);
-    char* name = name_Ptr.get();
-    size_t name_length = strlen(name) + 1;
-    char* name_new = new char[name_length];
-    strncpy(name_new, name, name_length);
-    outputNames.push_back(name_new);
-  }
-  return outputNames;
 }
 
 bool Sam::preprocessImage(const cv::Mat& image){

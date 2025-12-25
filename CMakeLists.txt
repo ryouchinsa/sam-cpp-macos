@@ -4,16 +4,18 @@ project(SamCPP)
 find_package(OpenCV CONFIG REQUIRED)
 find_package(gflags CONFIG REQUIRED)
 
-add_library(sam_cpp_lib SHARED sam.h sam.cpp)
+add_library(sam_cpp_lib SHARED sam.h sam.cpp util.h util.cpp)
 if (APPLE)
   set(onnxruntime_lib ${ONNXRUNTIME_ROOT_DIR}/lib/libonnxruntime.dylib)
 else()
   set(onnxruntime_lib ${ONNXRUNTIME_ROOT_DIR}/lib/libonnxruntime.so)
 endif()
+
 target_include_directories(
   sam_cpp_lib PUBLIC 
   ${ONNXRUNTIME_ROOT_DIR}/include
 )
+
 target_link_libraries(
   sam_cpp_lib PUBLIC
   ${onnxruntime_lib}
