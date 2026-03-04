@@ -8,7 +8,7 @@ We recommend working through this blog post side-by-side with the [Google Colab 
 
 Install [CUDA, cuDNN, PyTorch, and ONNX Runtime](https://rectlabel.com/pytorch/).
 
-Install [SAM 2](https://github.com/facebookresearch/sam2), download checkpoints and copy yaml files in sam2/configs/sam2.1 to sam2.
+Install SAM 2, download checkpoints and copy yaml files in sam2/configs/sam2.1 to sam2.
 
 ```bash
 git clone https://github.com/facebookresearch/sam2.git && cd sam2
