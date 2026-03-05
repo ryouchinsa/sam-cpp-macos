@@ -47,7 +47,7 @@ Build and run.
 # macOS
 cmake -S . -B build -DONNXRUNTIME_ROOT_DIR=/Users/ryo/Downloads/onnxruntime-osx-universal2-1.23.2
 # Ubuntu GPU
-cmake -S . -B build -DONNXRUNTIME_ROOT_DIR=/root/onnxruntime-linux-x64-gpu-1.23.2
+cmake -S . -B build -DONNXRUNTIME_ROOT_DIR=/content/onnxruntime-linux-x64-gpu-1.23.2
 
 cmake --build build
 
